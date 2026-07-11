@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.AniAuth" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="android:windowSplashScreenBackground">#0C0F14</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_aniauth_logo</item>
+    </style>
+</resources>
