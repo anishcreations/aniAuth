@@ -14,7 +14,7 @@
   <a href="https://developer.android.com/jetpack/compose"><img src="https://img.shields.io/badge/Jetpack_Compose-2024.06.00-4285F4.svg?style=flat-square&logo=jetpackcompose" alt="Compose" /></a>
   <img src="https://img.shields.io/badge/Min_SDK-26-orange.svg?style=flat-square" alt="Min SDK" />
   <img src="https://img.shields.io/badge/Target_SDK-35-blue.svg?style=flat-square" alt="Target SDK" />
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square" alt="License" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square" alt="License" /></a>
 </p>
 
 <p align="center">
@@ -41,18 +41,21 @@
 
 ### Seamless Setup
 - **High-Speed QR Scanner**: Built using Google ML Kit Vision API for instant QR code scanning.
-- **Manual Entry**: Polished form with field validation for adding keys with custom labels and usernames.
+- **Manual Entry**: Polished form with field validation for adding keys with custom labels and names.
 
 ### Premium Security
 - **Hardware-Backed Encryption**: Master encryption keys are stored securely within the device's Secure Element (SE) or Trusted Execution Environment (TEE) via the Android KeyStore.
 - **Biometric Access Control**: Optional biometric prompt (fingerprint or face unlock) required on app startup.
-- **Zero Network Footprint**: Fully offline. The app requests no internet permission (`android.permission.INTERNET` is omitted from the manifest).
+- **Zero Network Footprint**: Fully offline. The app requests no internet permission except for opening support links via external browser.
 
 ### Aesthetic UI/UX
 - **Deep Space Theme**: Modern, high-contrast dark theme built with Jetpack Compose Material 3.
-- **Dynamic Visual Timer**: A glowing circular progress indicator tracks the 30-second token lifecycle, turning red in the final 5 seconds.
+- **Dedicated Settings Screen**: Access data management (encrypted backups/imports), biometric security toggles, policy details, and guides in one centralized screen.
+- **Dynamic User Manual**: Soothing, accessible guide detailing app controls, shortcuts, and usage.
+- **Integrated Search & Timer**: Unified search bar and countdown timer in a sleek pill header. Displays a soft-toned refresh message that collapses into an active search field with automatic keyboard focus on click.
 - **One-Tap Copy**: Tap any card to copy the code directly to your clipboard.
-- **Adaptive Launcher Icon**: Creative geometric "A" icon designed for modern home screen styling.
+- **Account Management**: Long-press any card to securely view decrypted secret keys, edit account metadata, or delete credentials.
+- **Adaptive Launcher Icon**: Creative geometric "A" icon with glowing arches designed for modern home screen styling.
 
 ---
 
@@ -95,7 +98,8 @@ aniAuth/
 │   │   │   │   │   │   ├── BiometricLockScreen.kt
 │   │   │   │   │   │   ├── DashboardScreen.kt
 │   │   │   │   │   │   ├── ScannerScreen.kt
-│   │   │   │   │   │   └── AccountDetailsScreen.kt
+│   │   │   │   │   │   ├── AccountDetailsScreen.kt
+│   │   │   │   │   │   └── SettingsScreen.kt
 │   │   │   │   │   └── theme/
 │   │   │   │   │       ├── Color.kt
 │   │   │   │   │       └── Theme.kt
@@ -104,6 +108,8 @@ aniAuth/
 │   └── build.gradle.kts
 ├── build.gradle.kts
 ├── settings.gradle.kts
+├── CHANGELOG.md
+├── LICENSE
 └── README.md
 ```
 
@@ -111,9 +117,9 @@ aniAuth/
 
 ## Compatibility & Imports
 
-aniAuth makes migrating from other password managers and authenticators seamless by offering smart imports:
+aniAuth makes migrating from other password managers and authenticators seamless by offering smart one-way imports:
 * **Bitwarden Vault Exports**: Import Bitwarden's JSON vaults directly. The app will extract TOTP secrets from the standard `login.totp` field nested inside items.
-* **Generic JSON Formats**: The importer automatically parses common properties like `secret`, `key`, `encryptedSecret`, `label`, `name`, `issuer`, and `username` to build the credentials list.
+* **Universal Parser**: The importer automatically parses common properties like `secret`, `key`, `encryptedSecret`, `label`, `name`, `issuer`, and `username` to build the credentials list.
 * **Double-Encryption Safety**: On import, plain text secrets are parsed, encrypted via the device's hardware KeyStore immediately, and then written to the database.
 
 ---
@@ -155,4 +161,4 @@ aniAuth makes migrating from other password managers and authenticators seamless
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.

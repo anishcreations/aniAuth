@@ -9,28 +9,43 @@ import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import com.aniauth.authenticator.crypto.OtpAuthParser
 import com.aniauth.authenticator.crypto.KeyStoreHelper
 import com.aniauth.authenticator.crypto.TotpGenerator
@@ -54,7 +69,11 @@ fun DashboardScreen(
     var searchQuery by remember { mutableStateOf("") }
     var showAddDialog by remember { mutableStateOf(false) }
     var showScanner by remember { mutableStateOf(false) }
+    var showSettings by remember { mutableStateOf(false) }
+    var showManual by remember { mutableStateOf(false) }
     var selectedAccountForDetails by remember { mutableStateOf<Account?>(null) }
+    var isSearchExpanded by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
     
     // Timer states
     var timeRemaining by remember { mutableLongStateOf(30L - (System.currentTimeMillis() / 1000 % 30)) }
@@ -66,44 +85,40 @@ fun DashboardScreen(
             val currentSecond = System.currentTimeMillis() / 1000
             timeRemaining = 30L - (currentSecond % 30)
             progress = timeRemaining / 30f
-            delay(200L) // Refresh frequently for responsive progress bar
+            delay(200L) 
         }
     }
     
     val filteredAccounts = accounts.filter {
         it.label.contains(searchQuery, ignoreCase = true) ||
-        (it.issuer != null && it.issuer.contains(searchQuery, ignoreCase = true))
+        (it.username != null && it.username.contains(searchQuery, ignoreCase = true))
     }
     
     Scaffold(
         topBar = {
-            LargeTopAppBar(
+            TopAppBar(
                 title = {
                     Text(
                         "aniAuth",
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary,
-                        fontSize = 32.sp
+                        color = TextPrimary.copy(alpha = 0.9f),
+                        fontSize = 24.sp
                     )
                 },
                 actions = {
-                    IconButton(onClick = onImportBackup) {
-                        Icon(Icons.Default.UploadFile, contentDescription = "Import Backup", tint = PurpleAccent)
-                    }
-                    IconButton(onClick = onExportBackup) {
-                        Icon(Icons.Default.DownloadForOffline, contentDescription = "Export Backup", tint = PurpleAccent)
-                    }
-                    IconButton(onClick = { onToggleLock(!isLocked) }) {
+                    IconButton(
+                        onClick = { showSettings = true },
+                        modifier = Modifier.padding(end = 4.dp)
+                    ) {
                         Icon(
-                            if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
-                            contentDescription = "Toggle Lock",
-                            tint = if (isLocked) EmeraldGreen else TextSecondary
+                            Icons.Default.Settings, 
+                            contentDescription = "Settings", 
+                            tint = PurpleAccent,
+                            modifier = Modifier.size(30.dp)
                         )
                     }
                 },
-                colors = TopAppBarDefaults.largeTopAppBarColors(
-                    containerColor = DarkBg
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg)
             )
         },
         floatingActionButton = {
@@ -135,48 +150,27 @@ fun DashboardScreen(
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp)
         ) {
-            // Search field
-            TextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                placeholder = { Text("Search accounts...", color = TextSecondary) },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = TextSecondary) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = DarkCard,
-                    unfocusedContainerColor = DarkCard,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
-                ),
-                singleLine = true
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            // Progress Header
+            // Cohesive Search + Timer Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .padding(vertical = 12.dp)
+                    .height(64.dp)
+                    .clip(RoundedCornerShape(32.dp))
                     .background(DarkCard)
-                    .padding(16.dp),
+                    .border(1.dp, BorderColor.copy(alpha = 0.5f), RoundedCornerShape(32.dp))
+                    .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Circular Timer
+                // Circular Timer on the Left
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier.size(40.dp)
                 ) {
                     CircularProgressIndicator(
                         progress = { progress },
                         color = if (timeRemaining <= 5) Color.Red else EmeraldGreen,
-                        strokeWidth = 4.dp,
+                        strokeWidth = 3.dp,
                         trackColor = BorderColor,
                         strokeCap = StrokeCap.Round,
                         modifier = Modifier.fillMaxSize()
@@ -185,28 +179,77 @@ fun DashboardScreen(
                         text = timeRemaining.toString(),
                         color = if (timeRemaining <= 5) Color.Red else TextPrimary,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
+                        fontSize = 11.sp
                     )
                 }
-                
-                Spacer(modifier = Modifier.width(16.dp))
-                
-                Column {
-                    Text(
-                        "Time-based OTP",
-                        color = TextPrimary,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 16.sp
-                    )
-                    Text(
-                        "Codes refresh automatically every 30s",
-                        color = TextSecondary,
-                        fontSize = 12.sp
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Middle area: switch between Info text and Search text field
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    if (isSearchExpanded) {
+                        BasicTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            textStyle = TextStyle(color = TextPrimary, fontSize = 15.sp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .focusRequester(focusRequester),
+                            singleLine = true,
+                            decorationBox = { innerTextField ->
+                                Box(contentAlignment = Alignment.CenterStart) {
+                                    if (searchQuery.isEmpty()) {
+                                        Text("Search accounts...", color = TextSecondary, fontSize = 15.sp)
+                                    }
+                                    innerTextField()
+                                }
+                            }
+                        )
+                        LaunchedEffect(Unit) {
+                            focusRequester.requestFocus()
+                        }
+                    } else {
+                        Column {
+                            Text(
+                                "Time-based OTP",
+                                color = TextPrimary.copy(alpha = 0.85f),
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 15.sp
+                            )
+                            Text(
+                                "Automatically refreshes every 30s",
+                                color = TextSecondary.copy(alpha = 0.6f),
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Search/Close Toggle Button on the Right
+                IconButton(
+                    onClick = {
+                        if (isSearchExpanded) {
+                            searchQuery = ""
+                            isSearchExpanded = false
+                        } else {
+                            isSearchExpanded = true
+                        }
+                    },
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isSearchExpanded) Icons.Default.Close else Icons.Default.Search,
+                        contentDescription = if (isSearchExpanded) "Close Search" else "Open Search",
+                        tint = PurpleAccent,
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }
-            
-            Spacer(modifier = Modifier.height(8.dp))
             
             // Accounts List
             if (filteredAccounts.isEmpty()) {
@@ -228,18 +271,45 @@ fun DashboardScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(bottom = 80.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    contentPadding = PaddingValues(top = 4.dp, bottom = 100.dp)
                 ) {
-                items(filteredAccounts, key = { it.id }) { account ->
-                    AccountCard(
-                        account = account,
-                        timeRemaining = timeRemaining,
-                        onLongClick = {
-                            selectedAccountForDetails = account
+                    items(filteredAccounts, key = { it.id }) { account ->
+                        AccountCard(
+                            account = account,
+                            timeRemaining = timeRemaining,
+                            onLongClick = {
+                                selectedAccountForDetails = account
+                            }
+                        )
+                    }
+
+                    // Noticeable Footer at the end of scroll
+                    item {
+                        Surface(
+                            onClick = { showManual = true },
+                            color = PurpleAccent.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 24.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, tint = PurpleAccent, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    "View User Manual & Tips",
+                                    color = PurpleAccent,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
-                    )
-                }
+                    }
                 }
             }
         }
@@ -273,6 +343,21 @@ fun DashboardScreen(
         )
     }
 
+    if (showSettings) {
+        SettingsScreen(
+            onDismiss = { showSettings = false },
+            onExport = onExportBackup,
+            onImport = onImportBackup,
+            isLocked = isLocked,
+            onToggleLock = onToggleLock,
+            onShowManual = { showManual = true }
+        )
+    }
+
+    if (showManual) {
+        UserManualDialog(onDismiss = { showManual = false })
+    }
+
     selectedAccountForDetails?.let { account ->
         AccountDetailsScreen(
             account = account,
@@ -290,6 +375,46 @@ fun DashboardScreen(
                 Toast.makeText(context, "Account deleted", Toast.LENGTH_SHORT).show()
             }
         )
+    }
+}
+
+@Composable
+fun UserManualDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("User Manual & Tips", color = TextPrimary, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                GuideItem(Icons.Default.TouchApp, "Tap any card to copy its 2FA code.")
+                GuideItem(Icons.Default.AdsClick, "Long-press a card to edit details or view the secret key.")
+                GuideItem(Icons.Default.QrCodeScanner, "Tap the scanner button to scan 2FA QR codes via camera.")
+                GuideItem(Icons.Default.Add, "Tap the + button to manually add accounts.")
+                GuideItem(Icons.Default.Security, "All data is encrypted and stored locally on your device.")
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(containerColor = PurpleAccent)
+            ) {
+                Text("Got it", color = TextPrimary)
+            }
+        },
+        containerColor = DarkCard
+    )
+}
+
+@Composable
+fun GuideItem(icon: ImageVector, text: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, contentDescription = null, tint = PurpleAccent, modifier = Modifier.size(20.dp))
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(text, color = TextPrimary, fontSize = 13.sp, lineHeight = 18.sp)
     }
 }
 
@@ -328,7 +453,8 @@ fun AccountCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .height(100.dp) // Slimmer fixed height
+            .clip(RoundedCornerShape(12.dp)) // Slightly tighter corners for slim look
             .combinedClickable(
                 onClick = {
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -345,8 +471,8 @@ fun AccountCard(
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+                .fillMaxSize() // Use fillMaxSize to match card height
+                .padding(horizontal = 16.dp, vertical = 8.dp), // Reduced vertical padding
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -355,37 +481,33 @@ fun AccountCard(
                     text = account.label,
                     color = PurpleAccent,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    letterSpacing = 0.05.sp
+                    fontSize = 18.sp, 
+                    letterSpacing = 0.05.sp,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
                 
                 if (!account.username.isNullOrEmpty()) {
                     Text(
                         text = account.username,
-                        color = TextPrimary,
+                        color = TextPrimary.copy(alpha = 0.6f),
                         fontWeight = FontWeight.Medium,
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(top = 2.dp)
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(top = 1.dp),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
-                
-                Spacer(modifier = Modifier.height(12.dp))
-                
-                Text(
-                    text = formattedCode,
-                    color = if (timeRemaining <= 5) Color.Red else EmeraldGreen,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 32.sp,
-                    fontFamily = FontFamily.Monospace,
-                    letterSpacing = 2.sp
-                )
             }
             
-            Icon(
-                Icons.Default.ContentCopy,
-                contentDescription = "Copy Code",
-                tint = TextSecondary,
-                modifier = Modifier.size(20.dp)
+            // Code in the middle/right
+            Text(
+                text = formattedCode,
+                color = if (timeRemaining <= 5) Color.Red else EmeraldGreen,
+                fontWeight = FontWeight.Bold,
+                fontSize = 28.sp,
+                fontFamily = FontFamily.Monospace,
+                letterSpacing = 1.sp
             )
         }
     }
