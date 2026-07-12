@@ -7,7 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.0.0] - 2026-07-11
+## [0.1.0]
+
+Hardened TOTP algorithm with integer overflow safeguards, key sanitization, RFC 6238 unit tests, and dual adaptive app icons.
+
+### Added
+- **TOTP Testing Harness**: Integrated JUnit testing with official RFC 6238 test vectors to guarantee algorithm precision.
+
+### Changed
+- **Adaptive App Icons**: Configured dual launcher icon assets (main icon without label, and zoomed-out variant for the splash screen banner to resolve text-clipping issues).
+- **Hardened TOTP Algorithm**: Fixed potential integer overflow and sign extension edge cases in the Base32 decoding loop via bitwise masking.
+- **Robust Key Sanitization**: Upgraded input handling to strip dashes (`-`) and all forms of whitespace (tabs, newlines) from copy-pasted secret keys.
+
+## [0.0.0]
 
 This is the initial release (Version 0.0.0) of aniAuth.
 

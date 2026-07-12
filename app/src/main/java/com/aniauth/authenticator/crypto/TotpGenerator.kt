@@ -7,14 +7,19 @@ import kotlin.math.pow
 
 object TotpGenerator {
 
-    fun generateTOTP(secret: String, timeInterval: Long = 30): String? {
-        val cleanSecret = secret.replace(" ", "").uppercase()
+    fun generateTOTP(
+        secret: String,
+        timeInterval: Long = 30,
+        timestamp: Long = System.currentTimeMillis() / 1000
+    ): String? {
+        val cleanSecret = secret.replace(Regex("[\\s-]"), "").uppercase()
+        if (cleanSecret.isEmpty()) return null
         val keyBytes = decodeBase32(cleanSecret) ?: return null
+        if (keyBytes.isEmpty()) return null
         
-        val currentTime = System.currentTimeMillis() / 1000
-        val timeStep = currentTime / timeInterval
+        val timeStep = timestamp / timeInterval
         
-        // Convert timeStep to a 8-byte byte array
+        // Convert timeStep to an 8-byte byte array
         val buffer = ByteBuffer.allocate(8)
         buffer.putLong(timeStep)
         val timeBytes = buffer.array()
@@ -56,10 +61,13 @@ object TotpGenerator {
             val valIndex = base32Chars.indexOf(char)
             if (valIndex == -1) return null // Invalid Base32 character
             
-            buffer = (buffer shl 5) or valIndex
+            // Mask with 0xFFFF to prevent integer overflow and sign extension issues
+            buffer = ((buffer shl 5) or valIndex) and 0xFFFF
             bitsLeft += 5
             if (bitsLeft >= 8) {
-                bytes[count++] = (buffer shr (bitsLeft - 8)).toByte()
+                if (count < bytes.size) {
+                    bytes[count++] = (buffer shr (bitsLeft - 8)).toByte()
+                }
                 bitsLeft -= 8
             }
         }
