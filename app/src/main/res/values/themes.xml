@@ -3,6 +3,6 @@
     <style name="Theme.AniAuth" parent="Theme.AppCompat.DayNight.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="android:windowSplashScreenBackground">#0C0F14</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_aniauth_logo</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_aniauth_splash</item>
     </style>
 </resources>

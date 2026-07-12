@@ -129,7 +129,7 @@ aniAuth makes migrating from other password managers and authenticators seamless
 
 ---
 
-## Build & Installation
+## 🛠 Build & Installation
 
 ### Prerequisites
 * **JDK 17** or higher
