@@ -26,28 +26,29 @@
 > [!NOTE]
 > See [CHANGELOG.md](CHANGELOG.md) for detailed version updates and release logs.
 
-## 📖 Table of Contents
-- [🚀 Features](#-features)
-- [🔒 Security & Threat Model](#-security--threat-model)
-- [📂 Codebase Structure](#-codebase-structure)
-- [📦 Compatibility & Imports](#-compatibility--imports)
-- [💡 How It Works Under the Hood](#-how-it-works-under-the-hood)
-- [📄 License](#-license)
+## Table of Contents
+- [Features](#features)
+- [Security & Threat Model](#security--threat-model)
+- [Codebase Structure](#codebase-structure)
+- [Compatibility & Imports](#compatibility--imports)
+- [How It Works Under the Hood](#how-it-works-under-the-hood)
+- [Build & Installation](#build--installation)
+- [License](#license)
 
 ---
 
-## 🚀 Features
+## Features
 
-### ⚡ Seamless Setup
+### Seamless Setup
 - **High-Speed QR Scanner**: Built using Google ML Kit Vision API for instant QR code scanning.
 - **Manual Entry**: Polished form with field validation for adding keys with custom labels and usernames.
 
-### 🔒 Premium Security
+### Premium Security
 - **Hardware-Backed Encryption**: Master encryption keys are stored securely within the device's Secure Element (SE) or Trusted Execution Environment (TEE) via the Android KeyStore.
 - **Biometric Access Control**: Optional biometric prompt (fingerprint or face unlock) required on app startup.
 - **Zero Network Footprint**: Fully offline. The app requests no internet permission (`android.permission.INTERNET` is omitted from the manifest).
 
-### 🌌 Aesthetic UI/UX
+### Aesthetic UI/UX
 - **Deep Space Theme**: Modern, high-contrast dark theme built with Jetpack Compose Material 3.
 - **Dynamic Visual Timer**: A glowing circular progress indicator tracks the 30-second token lifecycle, turning red in the final 5 seconds.
 - **One-Tap Copy**: Tap any card to copy the code directly to your clipboard.
@@ -55,7 +56,7 @@
 
 ---
 
-## 🔒 Security & Threat Model
+## Security & Threat Model
 
 ### 1. Data Encryption (At Rest)
 All account data is stored locally in `SharedPreferences`. The raw shared secrets are encrypted using the AES/GCM/NoPadding cipher.
@@ -71,7 +72,7 @@ When exporting backups, data security is maintained through a combination of key
 
 ---
 
-## 📂 Codebase Structure
+## Codebase Structure
 
 ```
 aniAuth/
@@ -108,7 +109,7 @@ aniAuth/
 
 ---
 
-## 📦 Compatibility & Imports
+## Compatibility & Imports
 
 aniAuth makes migrating from other password managers and authenticators seamless by offering smart imports:
 * **Bitwarden Vault Exports**: Import Bitwarden's JSON vaults directly. The app will extract TOTP secrets from the standard `login.totp` field nested inside items.
@@ -117,7 +118,7 @@ aniAuth makes migrating from other password managers and authenticators seamless
 
 ---
 
-## 💡 How It Works Under the Hood
+## How It Works Under the Hood
 
 ### RFC 6238 TOTP Standard
 1. The secret key is decoded from its Base32 string representation.
@@ -128,6 +129,30 @@ aniAuth makes migrating from other password managers and authenticators seamless
 
 ---
 
-## 📄 License
+## Build & Installation
+
+### Prerequisites
+* **JDK 17** or higher
+* **Android SDK** (API 26+)
+* **Android Studio Koala (or newer)** or command-line tools
+
+### Building from Source
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/anishcreations/aniAuth.git
+   cd aniAuth
+   ```
+2. Build the Debug APK:
+   ```bash
+   ./gradlew assembleDebug
+   ```
+3. Install the APK on a connected device/emulator:
+   ```bash
+   ./gradlew installDebug
+   ```
+
+---
+
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
