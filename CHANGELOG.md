@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 A major update introducing proper Light and Dark mode theme support, premium Obsidian-Violet dark mode UI, interactive theme settings dialog, and various visual design refinements.
 
 ### Added
+- **Delete Confirmation Dialog**: Added a confirmation popup when deleting an account to prevent accidental deletions.
 - **Proper Light & Dark Theme Support**: Dynamically switch theme settings between System Default, Light Mode, and Dark Mode.
 - **Obsidian-Violet Dark Mode**: Refined the default dark theme with a warm, deep black-violet backdrop (`0xFF08070A`) and cards (`0xFF120E1A`) for a rich, premium look.
 - **Theme Selection Dialog**: Interactive popup dialog in settings with radio buttons for custom theme selection.

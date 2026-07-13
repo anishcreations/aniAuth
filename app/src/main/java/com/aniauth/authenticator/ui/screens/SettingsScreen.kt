@@ -166,7 +166,7 @@ fun SettingsScreen(
             item {
                 Spacer(modifier = Modifier.height(40.dp))
                 Text(
-                    "aniAuth v1.0.0",
+                    "aniAuth v1.1.0",
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
                     color = TextSecondary,

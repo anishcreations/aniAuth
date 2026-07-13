@@ -33,6 +33,7 @@ fun AccountDetailsScreen(
     var label by remember { mutableStateOf(account.label) }
     var username by remember { mutableStateOf(account.username ?: "") }
     var isSecretVisible by remember { mutableStateOf(false) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
     
     val decryptedSecret = remember(account.encryptedSecret) {
         KeyStoreHelper.decrypt(account.encryptedSecret) ?: "Error decrypting"
@@ -62,7 +63,7 @@ fun AccountDetailsScreen(
                         focusedIndicatorColor = PurpleAccent,
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary
-                    ),
+                     ),
                     modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
                 )
 
@@ -125,7 +126,7 @@ fun AccountDetailsScreen(
 
                 // Delete Action (Inside details for v1)
                 TextButton(
-                    onClick = onDelete,
+                    onClick = { showDeleteConfirmation = true },
                     modifier = Modifier.align(Alignment.Start),
                     contentPadding = PaddingValues(0.dp)
                 ) {
@@ -150,4 +151,29 @@ fun AccountDetailsScreen(
         },
         containerColor = MaterialTheme.colorScheme.surface
     )
+
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text("Confirm Deletion", color = TextPrimary, fontWeight = FontWeight.Bold) },
+            text = { Text("Are you sure you want to delete this account? This action cannot be undone.", color = TextSecondary) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteConfirmation = false
+                        onDelete()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                ) {
+                    Text("Delete", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("Cancel", color = TextPrimary)
+                }
+            },
+            containerColor = DarkCard
+        )
+    }
 }
