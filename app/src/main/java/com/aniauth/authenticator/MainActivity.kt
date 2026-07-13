@@ -32,6 +32,7 @@ class MainActivity : AppCompatActivity() {
 
     private var isAppLocked by mutableStateOf(false)
     private var isUnlocked by mutableStateOf(false)
+    private var themeSetting by mutableStateOf("system")
 
     // Default backup password key
     private val backupPassword = "aniauth_secure_pass".toCharArray()
@@ -127,6 +128,7 @@ class MainActivity : AppCompatActivity() {
         
         val prefs = getSharedPreferences("ani_auth_prefs", MODE_PRIVATE)
         isAppLocked = prefs.getBoolean("app_lock_enabled", false)
+        themeSetting = prefs.getString("theme_setting", "system") ?: "system"
 
         setupBiometrics()
         setContent { AppContent() }
@@ -138,7 +140,12 @@ class MainActivity : AppCompatActivity() {
 
     @Composable
     private fun AppContent() {
-        AniAuthTheme {
+        val darkTheme = when (themeSetting) {
+            "light" -> false
+            "dark" -> true
+            else -> androidx.compose.foundation.isSystemInDarkTheme()
+        }
+        AniAuthTheme(darkTheme = darkTheme) {
             Surface(
                 modifier = Modifier.fillMaxSize(),
                 color = MaterialTheme.colorScheme.background
@@ -158,7 +165,15 @@ class MainActivity : AppCompatActivity() {
                             isAppLocked = enabled
                             if (enabled) isUnlocked = false
                         },
-                        isLocked = isAppLocked
+                        isLocked = isAppLocked,
+                        themeSetting = themeSetting,
+                        onThemeChange = { newTheme ->
+                            getSharedPreferences("ani_auth_prefs", MODE_PRIVATE)
+                                .edit()
+                                .putString("theme_setting", newTheme)
+                                .apply()
+                            themeSetting = newTheme
+                        }
                     )
                 }
             }

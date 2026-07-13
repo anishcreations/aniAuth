@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0]
+
+A major update introducing proper Light and Dark mode theme support, premium Obsidian-Violet dark mode UI, interactive theme settings dialog, and various visual design refinements.
+
+### Added
+- **Proper Light & Dark Theme Support**: Dynamically switch theme settings between System Default, Light Mode, and Dark Mode.
+- **Obsidian-Violet Dark Mode**: Refined the default dark theme with a warm, deep black-violet backdrop (`0xFF08070A`) and cards (`0xFF120E1A`) for a rich, premium look.
+- **Theme Selection Dialog**: Interactive popup dialog in settings with radio buttons for custom theme selection.
+- **Adaptive Footer Styling**: The "View User Manual & Tips" scroll footer button automatically adjusts colors (dynamic `SoftFooterColor`) and uses softer text formatting and transparency depending on the active theme.
+- **Backup Instruction in Manual**: Appended a new guide item to the user manual detailing how to export and import backups.
+- **Import Guidance in Empty State**: Added clear instructions in the dashboard's empty state directing users to Settings to import keys when no accounts are found.
+
+### Changed
+- **Unified Dialog Styling**: Standardized the User Manual dialog confirm button to match the rest of the application's clean text-button design.
+- **Compacted Spacing**: Improved the layout efficiency of the theme picker dialog by reducing vertical row padding and column gaps.
+- **FAB Translucency**: Muted the floating action buttons (`+` and `scan`) with a soft transparency on dark theme to improve visual balance.
+
+---
+
 ## [1.0.0]
 
 A major upgrade introducing a feature-rich settings dashboard, interactive user manual, unified search-and-timer header, and a space-saving side-by-side clean card layout.

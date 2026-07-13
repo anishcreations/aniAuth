@@ -62,7 +62,9 @@ fun DashboardScreen(
     onExportBackup: () -> Unit,
     onImportBackup: () -> Unit,
     onToggleLock: (Boolean) -> Unit,
-    isLocked: Boolean
+    isLocked: Boolean,
+    themeSetting: String,
+    onThemeChange: (String) -> Unit
 ) {
     val context = LocalContext.current
     var accounts by remember { mutableStateOf(repository.getAccounts()) }
@@ -125,7 +127,7 @@ fun DashboardScreen(
             Column(horizontalAlignment = Alignment.End) {
                 FloatingActionButton(
                     onClick = { showScanner = true },
-                    containerColor = PurpleAccent,
+                    containerColor = if (MaterialTheme.colorScheme.background == RawLightBg) PurpleAccent else PurpleAccent.copy(alpha = 0.85f),
                     contentColor = Color.White,
                     shape = CircleShape,
                     modifier = Modifier.padding(bottom = 16.dp)
@@ -134,7 +136,7 @@ fun DashboardScreen(
                 }
                 FloatingActionButton(
                     onClick = { showAddDialog = true },
-                    containerColor = PurpleAccent,
+                    containerColor = if (MaterialTheme.colorScheme.background == RawLightBg) PurpleAccent else PurpleAccent.copy(alpha = 0.85f),
                     contentColor = Color.White,
                     shape = CircleShape
                 ) {
@@ -260,7 +262,7 @@ fun DashboardScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        "No accounts found.\nScan a QR code or tap + to add one.",
+                        "No accounts found.\nScan a QR code or tap + to add one,\nor go to settings to import keys.",
                         color = TextSecondary,
                         textAlign = TextAlign.Center,
                         fontSize = 16.sp
@@ -288,7 +290,7 @@ fun DashboardScreen(
                     item {
                         Surface(
                             onClick = { showManual = true },
-                            color = PurpleAccent.copy(alpha = 0.1f),
+                            color = SoftFooterColor.copy(alpha = 0.04f),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -299,13 +301,13 @@ fun DashboardScreen(
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, tint = PurpleAccent, modifier = Modifier.size(18.dp))
+                                Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, tint = SoftFooterColor.copy(alpha = 0.8f), modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     "View User Manual & Tips",
-                                    color = PurpleAccent,
+                                    color = SoftFooterColor.copy(alpha = 0.8f),
                                     fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Medium
                                 )
                             }
                         }
@@ -350,7 +352,9 @@ fun DashboardScreen(
             onImport = onImportBackup,
             isLocked = isLocked,
             onToggleLock = onToggleLock,
-            onShowManual = { showManual = true }
+            onShowManual = { showManual = true },
+            themeSetting = themeSetting,
+            onThemeChange = onThemeChange
         )
     }
 
@@ -389,15 +393,13 @@ fun UserManualDialog(onDismiss: () -> Unit) {
                 GuideItem(Icons.Default.AdsClick, "Long-press a card to edit details or view the secret key.")
                 GuideItem(Icons.Default.QrCodeScanner, "Tap the scanner button to scan 2FA QR codes via camera.")
                 GuideItem(Icons.Default.Add, "Tap the + button to manually add accounts.")
+                GuideItem(Icons.Default.Backup, "Export password-protected backups or import from settings.")
                 GuideItem(Icons.Default.Security, "All data is encrypted and stored locally on your device.")
             }
         },
         confirmButton = {
-            Button(
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = PurpleAccent)
-            ) {
-                Text("Got it", color = TextPrimary)
+            TextButton(onClick = onDismiss) {
+                Text("Got it", color = PurpleAccent)
             }
         },
         containerColor = DarkCard

@@ -49,9 +49,10 @@
 - **Zero Network Footprint**: Fully offline. The app requests no internet permission except for opening support links via external browser.
 
 ### Aesthetic UI/UX
-- **Deep Space Theme**: Modern, high-contrast dark theme built with Jetpack Compose Material 3.
-- **Dedicated Settings Screen**: Access data management (encrypted backups/imports), biometric security toggles, policy details, and guides in one centralized screen.
-- **Dynamic User Manual**: Soothing, accessible guide detailing app controls, shortcuts, and usage.
+- **Aesthetic Light & Dark Themes**: Modern, high-contrast themes built with Jetpack Compose Material 3. Features a premium "Obsidian-Violet" dark mode, and a sleek, high-readability light mode.
+- **Dynamic Theme Selector**: Choose between Light Mode, Dark Mode, or System Default dynamically in the settings panel.
+- **Dedicated Settings Screen**: Access theme configurations, data management (encrypted backups/imports), biometric security toggles, policy details, and guides in one centralized screen.
+- **Dynamic User Manual**: Soothing, accessible guide detailing app controls, shortcuts, backups, and usage.
 - **Integrated Search & Timer**: Unified search bar and countdown timer in a sleek pill header. Displays a soft-toned refresh message that collapses into an active search field with automatic keyboard focus on click.
 - **One-Tap Copy**: Tap any card to copy the code directly to your clipboard.
 - **Account Management**: Long-press any card to securely view decrypted secret keys, edit account metadata, or delete credentials.

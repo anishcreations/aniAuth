@@ -33,11 +33,14 @@ fun SettingsScreen(
     onImport: () -> Unit,
     isLocked: Boolean,
     onToggleLock: (Boolean) -> Unit,
-    onShowManual: () -> Unit
+    onShowManual: () -> Unit,
+    themeSetting: String,
+    onThemeChange: (String) -> Unit
 ) {
     val context = LocalContext.current
     var showPrivacyDialog by remember { mutableStateOf(false) }
     var showDisclaimerDialog by remember { mutableStateOf(false) }
+    var showThemeDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -107,12 +110,18 @@ fun SettingsScreen(
             item {
                 SettingsSection(title = "Appearance") {
                     SettingsItem(
-                        icon = Icons.Default.DarkMode,
+                        icon = when (themeSetting) {
+                            "light" -> Icons.Default.LightMode
+                            "dark" -> Icons.Default.DarkMode
+                            else -> Icons.Default.SettingsSuggest
+                        },
                         title = "Theme",
-                        subtitle = "Switch between Dark and Light mode",
-                        onClick = { 
-                            Toast.makeText(context, "Theme support coming in next update!", Toast.LENGTH_SHORT).show()
-                        }
+                        subtitle = when (themeSetting) {
+                            "light" -> "Light Mode"
+                            "dark" -> "Dark Mode"
+                            else -> "System Default"
+                        },
+                        onClick = { showThemeDialog = true }
                     )
                 }
             }
@@ -206,6 +215,54 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(onClick = { showDisclaimerDialog = false }) {
                     Text("I Understand", color = PurpleAccent)
+                }
+            },
+            containerColor = DarkCard
+        )
+    }
+
+    if (showThemeDialog) {
+        AlertDialog(
+            onDismissRequest = { showThemeDialog = false },
+            title = { Text("Select Theme", color = TextPrimary, fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    val options = listOf(
+                        "system" to "System Default",
+                        "light" to "Light Mode",
+                        "dark" to "Dark Mode"
+                    )
+                    options.forEach { (value, label) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onThemeChange(value)
+                                    showThemeDialog = false
+                                }
+                                .padding(vertical = 4.dp, horizontal = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = (themeSetting == value),
+                                onClick = {
+                                    onThemeChange(value)
+                                    showThemeDialog = false
+                                },
+                                colors = RadioButtonDefaults.colors(
+                                    selectedColor = PurpleAccent,
+                                    unselectedColor = TextSecondary
+                                )
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(label, color = TextPrimary, fontSize = 16.sp)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showThemeDialog = false }) {
+                    Text("Cancel", color = PurpleAccent)
                 }
             },
             containerColor = DarkCard
