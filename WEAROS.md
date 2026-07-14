@@ -1,0 +1,213 @@
+# aniAuth Wear OS Companion ⌚
+
+Welcome to the dedicated documentation page for the **aniAuth Wear OS Companion** app (`v1.0.0`). 
+
+This companion module allows you to securely view your 2FA TOTP codes directly on your wrist (designed primarily for Galaxy Watch and Wear OS devices).
+
+---
+
+## 📖 Table of Contents
+- [Key Features](#-key-features)
+- [How It Works (Architecture)](#-how-it-works-architecture)
+- [Security & Threat Model](#-security--threat-model)
+- [Getting Started & Syncing](#-getting-started--syncing)
+- [Codebase Structure](#-codebase-structure)
+- [Changelog](#-changelog)
+- [Troubleshooting](#-troubleshooting)
+
+---
+
+## ✨ Key Features
+- **Instant Wrist Codes:** View live 6-digit TOTP codes with a clean, circular Wear OS interface optimized for round screens.
+- **Obsidian-Violet Styling:** A beautiful, dark AMOLED theme using the same Obsidian-Violet palette as the phone app (`Color(0xFF08070A)` background, `Color(0xFFC084FC)` accents).
+- **Fully Offline After Sync:** Once synced, your watch generates TOTP codes independently using its own local clock and local copy of the RFC 6238 algorithm — no phone or internet connection needed.
+- **Zero Scroll Lag:** Employs a self-contained `GlobalTimerHeader` composable (with its own isolated `LaunchedEffect` timer at 500ms intervals) so the account list only recomposes once every 30 seconds when TOTP codes actually change.
+- **Biometric-Protected Syncing:** Transfer accounts wirelessly from your phone with a single tap, protected by your phone's biometric/device credential locks.
+- **Instant Lock Passcode:** Secures your keys with a 4-digit PIN setup featuring iOS-style circular dot indicators. Locks instantly via `onPause()` on screen dim, backgrounding, or side-button presses.
+
+---
+
+## 🛠️ How It Works (Architecture)
+
+The companion app runs as a completely separate Gradle module (`:wearos`) with its own independent copies of all crypto and model classes — it shares zero runtime code with the phone `:app` module. The two apps communicate exclusively over Google's **Wearable Data Layer API**.
+
+### Sync Flow (Phone → Watch)
+
+```
+Phone App                              Bluetooth                    Watch App
+─────────                              ─────────                    ─────────
+1. User taps "Sync to Watch"
+   in Settings
+           │
+2. Biometric/credential
+   verification required
+           │
+3. AccountSerializer.toJson(           ──────────────────►   5. WearSyncService receives
+   accounts, decryptSecrets=true)       sendMessage()            message on "/sync-accounts"
+   produces JSON with plaintext         via Wearable             path
+   Base32 secrets                       MessageClient
+           │                                                         │
+4. Payload sent over                                          6. JSON parsed, each secret
+   "/sync-accounts" path                                         validated via
+                                                                 TotpGenerator.isValidSecret()
+                                                                     │
+                                                              7. Valid secrets encrypted with
+                                                                 watch's OWN KeyStore master
+                                                                 key (AniAuthWatchMasterKey)
+                                                                     │
+                                                              8. Encrypted accounts saved to
+                                                                 watch SharedPreferences
+                                                                 (file: wear_accounts_pref)
+                                                                     │
+                                                              9. Toast confirmation shown
+                                                                 with sync count
+```
+
+### Key Technical Details
+- **Matching Application ID:** Both apps use `com.aniauth.authenticator` as their `applicationId` and are signed with the same developer key. This is required by Google Play Services for Bluetooth pairing.
+- **Watch Presence Detection:** The phone app queries `Wearable.getNodeClient(context).connectedNodes` in the background. The "Sync to Watch" row in Settings only renders when at least one connected watch node is detected.
+- **Message Path:** Data is transmitted via `Wearable.getMessageClient().sendMessage(nodeId, "/sync-accounts", jsonBytes)` over the secure Bluetooth data layer.
+- **WearableListenerService:** The watch registers `WearSyncService` in its `AndroidManifest.xml` as a receiver bound to the Wearable message intent filter. The service wakes automatically when a message arrives on the `/sync-accounts` path.
+- **Re-encryption on Watch:** The phone decrypts secrets from its own KeyStore (`AniAuthMasterKey`) before sending. The watch then encrypts each secret with its own independent KeyStore key (`AniAuthWatchMasterKey`). This means the phone's and watch's encrypted blobs are completely different — neither can decrypt the other's data.
+
+### Offline Operation
+After the initial sync, the watch is 100% self-sufficient:
+- Accounts are stored locally in `SharedPreferences` on the watch's internal storage.
+- TOTP codes are computed locally using the watch's own `TotpGenerator` and its internal system clock.
+- You can turn off Bluetooth, power off your phone, or go offline — your watch will continue generating valid codes indefinitely.
+
+---
+
+## 🔒 Security & Threat Model
+
+### What happens if someone steals my watch?
+
+**Your 2FA keys remain completely secure.** Here's why:
+
+1. **Hardware-Backed Encryption (TEE/SE):**
+   All account secrets are encrypted with **AES-256-GCM** using a master key (alias: `AniAuthWatchMasterKey`) generated inside the watch's **Android KeyStore hardware enclave (TEE or Secure Element)**. This master key:
+   - Is generated inside the secure hardware and never leaves it.
+   - Cannot be exported, copied, dumped, or extracted — even with root/ADB access.
+   - Is bound to the specific watch hardware. Moving the encrypted `SharedPreferences` file to another device renders it unreadable.
+
+2. **Per-Secret Unique IV:**
+   Each account secret is encrypted with a cryptographically random **12-byte IV** generated by the AES-GCM cipher. Even if two accounts have the same Base32 secret, their encrypted blobs will be completely different.
+
+3. **Instant Auto-Lock:**
+   The app hooks into `ComponentActivity.onPause()`. The moment you:
+   - Look away (screen timeout)
+   - Press the side/home button
+   - Switch to another app
+   - Tilt your wrist away (Always-On Display triggers `onPause`)
+   
+   ...the app immediately resets `isUnlocked` to `false`, requiring the 4-digit PIN to re-enter.
+
+4. **In-Memory PIN Caching (Performance, Not Security Bypass):**
+   The PIN is decrypted from KeyStore once during `onCreate()` and cached in memory (`cachedCorrectPin`). This eliminates the ~200ms hardware KeyStore decryption delay during PIN entry. The cache is automatically cleared when the process is killed (e.g., by the system or on reboot).
+
+5. **Android App Sandbox:**
+   Android enforces strict process isolation. No other app on the watch can read aniAuth's private `SharedPreferences` files or access its KeyStore keys.
+
+6. **No Raw Key Display:**
+   Unlike the phone app (which allows viewing decrypted secrets via long-press), the watch UI has zero code paths that reveal or display raw Base32 secret keys. The UI only receives computed 6-digit TOTP codes.
+
+### Threat Summary
+
+| Threat | Mitigated? | How |
+|--------|-----------|-----|
+| Physical theft of watch | ✅ | PIN lock + hardware-bound KeyStore encryption |
+| ADB extraction of SharedPreferences | ✅ | Data is AES-GCM encrypted; master key is non-exportable |
+| Rooted watch / custom ROM | ✅ | KeyStore keys are in TEE/SE hardware; cannot be read by software |
+| Bluetooth interception during sync | ✅ | Wearable Data Layer uses encrypted BLE; requires paired devices |
+| Shoulder-surfing TOTP codes | ⚠️ | 6-digit codes rotate every 30s; limited window of usefulness |
+
+---
+
+## 🚀 Getting Started & Syncing
+
+### First-Time Setup
+1. Build and install **aniAuth** on both your phone and your Wear OS watch.
+2. Open the **aniAuth** app on your watch. You'll be prompted to **create a 4-digit PIN**.
+3. Confirm the PIN. You'll see a clean empty state: *"No accounts synced. Tap 'Sync to Watch' on your phone app."*
+
+### Syncing Accounts
+4. Open the aniAuth phone app → **Settings** → scroll to *Data & Backup*.
+5. Tap **Sync to Watch** (only visible when a watch is connected via Bluetooth).
+6. Verify your identity with fingerprint/face/device credentials.
+7. Your watch will display a Toast confirmation and instantly populate with your 2FA accounts!
+
+### Re-Syncing
+- You can re-sync at any time to update the watch with new accounts added on the phone.
+- Each sync **replaces** the entire watch database with the latest phone data.
+
+---
+
+## 📁 Codebase Structure
+
+```
+wearos/
+├── src/main/
+│   ├── java/com/aniauth/authenticator/wearos/
+│   │   ├── crypto/
+│   │   │   ├── KeyStoreHelper.kt        # AES-256-GCM encryption (key: AniAuthWatchMasterKey)
+│   │   │   │                            #   - getOrCreateSecretKey(): generates/retrieves TEE key
+│   │   │   │                            #   - encrypt(): IV(12) + ciphertext → Base64
+│   │   │   │                            #   - decrypt(): Base64 → plaintext (with ConcurrentHashMap cache)
+│   │   │   └── TotpGenerator.kt         # Standalone RFC 6238 implementation
+│   │   │                                #   - generateTOTP(): Base32 → HMAC-SHA1 → 6-digit code
+│   │   │                                #   - isValidSecret(): validates Base32 format
+│   │   ├── model/
+│   │   │   ├── Account.kt              # data class: id, label, encryptedSecret, issuer?, username?
+│   │   │   └── WatchRepository.kt      # SharedPreferences CRUD (file: wear_accounts_pref)
+│   │   │                                #   - decryptCached(): ConcurrentHashMap in-memory cache
+│   │   ├── sync/
+│   │   │   └── WearSyncService.kt      # WearableListenerService on "/sync-accounts" path
+│   │   │                                #   - Validates Base32 keys
+│   │   │                                #   - Re-encrypts with watch KeyStore
+│   │   │                                #   - Saves to local SharedPreferences
+│   │   └── MainActivity.kt             # Watch UI entry point
+│   │                                    #   - PinSetupScreen: create 4-digit PIN with dot indicators
+│   │                                    #   - PinLockScreen: unlock with cached PIN verification
+│   │                                    #   - WatchDashboard: ScalingLazyColumn account list
+│   │                                    #   - GlobalTimerHeader: isolated 30s countdown ring
+│   │                                    #   - WatchKeypad: lightweight Box-based grid buttons
+│   │                                    #   - WatchAccountCard: label + live TOTP code display
+│   ├── res/
+│   │   ├── mipmap-anydpi-v26/          # Adaptive launcher icons
+│   │   └── values/colors.xml
+│   └── AndroidManifest.xml
+└── build.gradle.kts
+```
+
+## 📋 Changelog
+
+### [1.0.0] (2026-07-14) — Initial Release
+
+#### Added
+- **Wear OS Module**: Fully standalone watch companion app layout, sync service, and UI flow.
+- **PIN Lock Screen**: Secure 4-digit lock screen featuring glowing passcode dots and instant locking.
+- **Watch Dashboard**: AMOLED-optimized account list and custom timer header to display synced 2FA codes.
+- **Lightweight Keypad**: Replaced heavy material buttons with compact grid keys for snappy digit entry.
+
+#### Optimized
+- **Scroll Performance**: Decoupled the progress countdown loop and cached decrypted secrets in-memory to ensure lag-free scrolling.
+- **Unlock Latency**: Cached PIN and KeyStore references in-memory to bypass slow cryptography lags on digit entry.
+- **Reactive Background Sync**: Updates the watch dashboard dynamically when phone-side sync occurs.
+- **Package Size & Overscroll**: Configured unextracted native libraries to save watch storage and snugged scroll padding to prevent empty list spaces.
+
+---
+
+## ❓ Troubleshooting
+
+### The "Sync to Watch" option doesn't show up in phone Settings!
+- Make sure **Bluetooth** is enabled on both devices.
+- *Ensure your watch is connected and paired via the **Galaxy Wearable** or **Wear OS by Google** companion app.
+- Both the phone and watch modules must share the exact same **Application ID** (`com.aniauth.authenticator`) and be signed with the **same developer certificate key**. If the signing keys are mismatched, Google Play Services will block pairing communication for security reasons.
+
+### Sync completes but watch shows "No accounts synced"
+- Check that you have at least one account on the phone app.
+- Look for a Toast message on the watch — if it says "Skipped X invalid keys", some accounts may have corrupted or non-Base32 secrets.
+
+### Codes on watch don't match codes on phone
+- Ensure your watch's **system clock is accurate**. TOTP codes are time-based — even a 30-second drift will produce different codes.
+- Go to **Settings → General → Date and Time** on your watch and enable **Automatic date and time**.
