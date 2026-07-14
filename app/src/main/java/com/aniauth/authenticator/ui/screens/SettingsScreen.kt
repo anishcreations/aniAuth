@@ -29,7 +29,7 @@ import com.aniauth.authenticator.ui.theme.*
 @Composable
 fun SettingsScreen(
     onDismiss: () -> Unit,
-    onExport: () -> Unit,
+    onExport: (Boolean) -> Unit,
     onImport: () -> Unit,
     isLocked: Boolean,
     onToggleLock: (Boolean) -> Unit,
@@ -41,6 +41,7 @@ fun SettingsScreen(
     var showPrivacyDialog by remember { mutableStateOf(false) }
     var showDisclaimerDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showExportDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -88,7 +89,7 @@ fun SettingsScreen(
                         icon = Icons.Default.DownloadForOffline,
                         title = "Export Backup",
                         subtitle = "Securely save your accounts to a file",
-                        onClick = onExport
+                        onClick = { showExportDialog = true }
                     )
                 }
             }
@@ -165,13 +166,22 @@ fun SettingsScreen(
             
             item {
                 Spacer(modifier = Modifier.height(40.dp))
-                Text(
-                    "aniAuth v1.1.0",
+                Box(
                     modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                    color = TextSecondary,
-                    fontSize = 12.sp
-                )
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "aniAuth v1.2.0",
+                        modifier = Modifier
+                            .clickable {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/anishcreations/aniAuth/blob/main/CHANGELOG.md"))
+                                context.startActivity(intent)
+                            }
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        color = TextSecondary,
+                        fontSize = 12.sp
+                    )
+                }
             }
         }
     }
@@ -263,6 +273,116 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(onClick = { showThemeDialog = false }) {
                     Text("Cancel", color = PurpleAccent)
+                }
+            },
+            containerColor = DarkCard
+        )
+    }
+
+    if (showExportDialog) {
+        var selectedEncrypted by remember { mutableStateOf(true) }
+
+        AlertDialog(
+            onDismissRequest = { showExportDialog = false },
+            title = { Text("Export Backup", color = TextPrimary, fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Select how you want to export your accounts:", color = TextSecondary, fontSize = 14.sp)
+                    
+                    // Option 1: Encrypted Export
+                    Surface(
+                        onClick = { selectedEncrypted = true },
+                        color = if (selectedEncrypted) PurpleAccent.copy(alpha = 0.15f) else Color.Transparent,
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(
+                            width = 1.dp,
+                            color = if (selectedEncrypted) PurpleAccent else BorderColor.copy(alpha = 0.5f)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = selectedEncrypted,
+                                onClick = { selectedEncrypted = true },
+                                colors = RadioButtonDefaults.colors(selectedColor = PurpleAccent, unselectedColor = TextSecondary)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Lock, contentDescription = null, tint = EmeraldGreen, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Encrypted Backup", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                                }
+                                Text(
+                                    "AES-256 encrypted. Safe to store almost anywhere (still, keep it secure!). Can only be restored in aniAuth.",
+                                    color = TextSecondary,
+                                    fontSize = 11.sp,
+                                    lineHeight = 15.sp,
+                                    modifier = Modifier.padding(top = 2.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    // Option 2: Decrypted Export
+                    Surface(
+                        onClick = { selectedEncrypted = false },
+                        color = if (!selectedEncrypted) Color(0xFFEF4444).copy(alpha = 0.1f) else Color.Transparent,
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(
+                            width = 1.dp,
+                            color = if (!selectedEncrypted) Color(0xFFEF4444) else BorderColor.copy(alpha = 0.5f)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = !selectedEncrypted,
+                                onClick = { selectedEncrypted = false },
+                                colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFEF4444), unselectedColor = TextSecondary)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Decrypted Backup", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                                }
+                                Text(
+                                    "Plaintext JSON containing all raw secret keys. Insecure! Anyone with access can read your keys.",
+                                    color = TextSecondary,
+                                    fontSize = 11.sp,
+                                    lineHeight = 15.sp,
+                                    modifier = Modifier.padding(top = 2.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onExport(selectedEncrypted)
+                        showExportDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (selectedEncrypted) PurpleAccent else Color(0xFFEF4444)
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Export", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showExportDialog = false }) {
+                    Text("Cancel", color = TextSecondary)
                 }
             },
             containerColor = DarkCard

@@ -33,6 +33,7 @@
 - [Compatibility & Imports](#compatibility--imports)
 - [How It Works Under the Hood](#how-it-works-under-the-hood)
 - [Build & Installation](#build--installation)
+- [Contact & Feedback](#contact--feedback)
 - [License](#license)
 
 ---
@@ -45,7 +46,7 @@
 
 ### Premium Security
 - **Hardware-Backed Encryption**: Master encryption keys are stored securely within the device's Secure Element (SE) or Trusted Execution Environment (TEE) via the Android KeyStore.
-- **Biometric Access Control**: Optional biometric prompt (fingerprint or face unlock) required on app startup.
+- **Biometric & Device Lock**: Optional biometric prompt (fingerprint or face unlock) required on app startup, with native device credentials (PIN/pattern/password) fallback to prevent lockouts.
 - **Zero Network Footprint**: Fully offline. The app requests no internet permission except for opening support links via external browser.
 
 ### Aesthetic UI/UX
@@ -55,6 +56,7 @@
 - **Dynamic User Manual**: Soothing, accessible guide detailing app controls, shortcuts, backups, and usage.
 - **Integrated Search & Timer**: Unified search bar and countdown timer in a sleek pill header. Displays a soft-toned refresh message that collapses into an active search field with automatic keyboard focus on click.
 - **One-Tap Copy**: Tap any card to copy the code directly to your clipboard.
+- **Flexible Backup Exports**: Export backups in secure Encrypted format (AES-256 encrypted with aniAuth's internal key) or Decrypted format (plaintext JSON) with built-in warnings.
 - **Account Management**: Long-press any card to securely view decrypted secret keys, edit account metadata, or delete credentials.
 - **Adaptive Launcher Icon**: Creative geometric "A" icon with glowing arches designed for modern home screen styling.
 
@@ -157,6 +159,13 @@ aniAuth makes migrating from other password managers and authenticators seamless
    ```bash
    ./gradlew installDebug
    ```
+
+## Contact & Feedback
+
+If you encounter bugs, have feature suggestions, or want to share feedback:
+* **Email**: Contact us at [anish.creations.hq@gmail.com](mailto:anish.creations.hq@gmail.com?subject=%5BaniAuth%20Android%5D%20Support%20/%20Feedback). Please keep the prefilled subject line intact.
+* **Website**: You can also contact me directly via [anisharyal09.com.np](https://anisharyal09.com.np/#contact) (for any support, features, or bugs).
+* **GitHub Issues**: You can report issues, request features, or submit pull requests directly on the repository's [issues page](https://github.com/anishcreations/aniAuth/issues).
 
 ---
 

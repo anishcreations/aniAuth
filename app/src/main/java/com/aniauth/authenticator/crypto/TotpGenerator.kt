@@ -73,4 +73,11 @@ object TotpGenerator {
         }
         return bytes
     }
+
+    fun isValidSecret(secret: String): Boolean {
+        val cleanSecret = secret.replace(Regex("[\\s-]"), "").uppercase()
+        if (cleanSecret.isEmpty()) return false
+        val keyBytes = decodeBase32(cleanSecret)
+        return keyBytes != null && keyBytes.isNotEmpty()
+    }
 }

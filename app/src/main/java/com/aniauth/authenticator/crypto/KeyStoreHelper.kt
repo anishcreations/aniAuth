@@ -16,6 +16,8 @@ object KeyStoreHelper {
     private const val KEY_ALIAS = "AniAuthMasterKey"
     private const val TRANSFORMATION = "AES/GCM/NoPadding"
 
+    private val decryptionCache = java.util.concurrent.ConcurrentHashMap<String, String>()
+
     init {
         getOrCreateSecretKey()
     }
@@ -56,6 +58,7 @@ object KeyStoreHelper {
     }
 
     fun decrypt(cipherText: String): String? {
+        decryptionCache[cipherText]?.let { return it }
         return try {
             val combined = Base64.decode(cipherText, Base64.NO_WRAP)
             val iv = ByteArray(12) // GCM standard IV size is 12 bytes
@@ -69,7 +72,9 @@ object KeyStoreHelper {
             cipher.init(Cipher.DECRYPT_MODE, getOrCreateSecretKey(), spec)
             
             val decryptedBytes = cipher.doFinal(encryptedBytes)
-            String(decryptedBytes, Charsets.UTF_8)
+            val decryptedStr = String(decryptedBytes, Charsets.UTF_8)
+            decryptionCache[cipherText] = decryptedStr
+            decryptedStr
         } catch (e: Exception) {
             e.printStackTrace()
             null

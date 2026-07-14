@@ -59,7 +59,7 @@ import java.util.Calendar
 @Composable
 fun DashboardScreen(
     repository: AccountRepository,
-    onExportBackup: () -> Unit,
+    onExportBackup: (Boolean) -> Unit,
     onImportBackup: () -> Unit,
     onToggleLock: (Boolean) -> Unit,
     isLocked: Boolean,
@@ -152,109 +152,139 @@ fun DashboardScreen(
                 .padding(paddingValues)
                 .padding(horizontal = 16.dp)
         ) {
-            // Cohesive Search + Timer Row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp)
-                    .height(64.dp)
-                    .clip(RoundedCornerShape(32.dp))
-                    .background(DarkCard)
-                    .border(1.dp, BorderColor.copy(alpha = 0.5f), RoundedCornerShape(32.dp))
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Circular Timer on the Left
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.size(40.dp)
+            if (accounts.isNotEmpty()) {
+                // Cohesive Search + Timer Row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp)
+                        .height(64.dp)
+                        .clip(RoundedCornerShape(32.dp))
+                        .background(DarkCard)
+                        .border(1.dp, BorderColor.copy(alpha = 0.5f), RoundedCornerShape(32.dp))
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    CircularProgressIndicator(
-                        progress = { progress },
-                        color = if (timeRemaining <= 5) Color.Red else EmeraldGreen,
-                        strokeWidth = 3.dp,
-                        trackColor = BorderColor,
-                        strokeCap = StrokeCap.Round,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                    Text(
-                        text = timeRemaining.toString(),
-                        color = if (timeRemaining <= 5) Color.Red else TextPrimary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                // Middle area: switch between Info text and Search text field
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    if (isSearchExpanded) {
-                        BasicTextField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
-                            textStyle = TextStyle(color = TextPrimary, fontSize = 15.sp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .focusRequester(focusRequester),
-                            singleLine = true,
-                            decorationBox = { innerTextField ->
-                                Box(contentAlignment = Alignment.CenterStart) {
-                                    if (searchQuery.isEmpty()) {
-                                        Text("Search accounts...", color = TextSecondary, fontSize = 15.sp)
-                                    }
-                                    innerTextField()
-                                }
-                            }
+                    // Circular Timer on the Left
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            progress = { progress },
+                            color = if (timeRemaining <= 5) Color.Red else EmeraldGreen,
+                            strokeWidth = 3.dp,
+                            trackColor = BorderColor,
+                            strokeCap = StrokeCap.Round,
+                            modifier = Modifier.fillMaxSize()
                         )
-                        LaunchedEffect(Unit) {
-                            focusRequester.requestFocus()
-                        }
-                    } else {
-                        Column {
-                            Text(
-                                "Time-based OTP",
-                                color = TextPrimary.copy(alpha = 0.85f),
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 15.sp
+                        Text(
+                            text = timeRemaining.toString(),
+                            color = if (timeRemaining <= 5) Color.Red else TextPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    // Middle area: switch between Info text and Search text field
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        if (isSearchExpanded) {
+                            BasicTextField(
+                                value = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                textStyle = TextStyle(color = TextPrimary, fontSize = 15.sp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .focusRequester(focusRequester),
+                                singleLine = true,
+                                decorationBox = { innerTextField ->
+                                    Box(contentAlignment = Alignment.CenterStart) {
+                                        if (searchQuery.isEmpty()) {
+                                            Text("Search accounts...", color = TextSecondary, fontSize = 15.sp)
+                                        }
+                                        innerTextField()
+                                    }
+                                }
                             )
-                            Text(
-                                "Automatically refreshes every 30s",
-                                color = TextSecondary.copy(alpha = 0.6f),
-                                fontSize = 11.sp
-                            )
+                            LaunchedEffect(Unit) {
+                                focusRequester.requestFocus()
+                            }
+                        } else {
+                            Column {
+                                Text(
+                                    "Time-based OTP",
+                                    color = TextPrimary.copy(alpha = 0.85f),
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 15.sp
+                                )
+                                Text(
+                                    "Automatically refreshes every 30s",
+                                    color = TextSecondary.copy(alpha = 0.6f),
+                                    fontSize = 11.sp
+                                )
+                            }
                         }
                     }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Search/Close Toggle Button on the Right
+                    IconButton(
+                        onClick = {
+                            if (isSearchExpanded) {
+                                searchQuery = ""
+                                isSearchExpanded = false
+                            } else {
+                                isSearchExpanded = true
+                            }
+                        },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isSearchExpanded) Icons.Default.Close else Icons.Default.Search,
+                            contentDescription = if (isSearchExpanded) "Close Search" else "Open Search",
+                            tint = PurpleAccent,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                 }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // Search/Close Toggle Button on the Right
-                IconButton(
-                    onClick = {
-                        if (isSearchExpanded) {
-                            searchQuery = ""
-                            isSearchExpanded = false
-                        } else {
-                            isSearchExpanded = true
-                        }
-                    },
-                    modifier = Modifier.size(36.dp)
+            } else {
+                // Minimal Placeholder with Import action in place of Search/Timer
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp)
+                        .height(64.dp)
+                        .clip(RoundedCornerShape(32.dp))
+                        .background(DarkCard)
+                        .border(1.dp, BorderColor.copy(alpha = 0.5f), RoundedCornerShape(32.dp))
+                        .padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Icon(
-                        imageVector = if (isSearchExpanded) Icons.Default.Close else Icons.Default.Search,
-                        contentDescription = if (isSearchExpanded) "Close Search" else "Open Search",
-                        tint = PurpleAccent,
-                        modifier = Modifier.size(22.dp)
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.VpnKey, contentDescription = null, tint = PurpleAccent, modifier = Modifier.size(24.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("No accounts added yet", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                    }
+                    TextButton(
+                        onClick = onImportBackup,
+                        contentPadding = PaddingValues(horizontal = 16.dp)
+                    ) {
+                        Icon(Icons.Default.UploadFile, contentDescription = null, tint = PurpleAccent, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Import", color = PurpleAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    }
                 }
             }
             
             // Accounts List
-            if (filteredAccounts.isEmpty()) {
+            if (accounts.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -262,7 +292,23 @@ fun DashboardScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        "No accounts found.\nScan a QR code or tap + to add one,\nor go to settings to import keys.",
+                        text = "Scan a QR code or tap + to add an account.\nYou can also import backups using the\nbutton above or in Settings.",
+                        color = TextSecondary,
+                        textAlign = TextAlign.Center,
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp,
+                        modifier = Modifier.fillMaxWidth(0.8f)
+                    )
+                }
+            } else if (filteredAccounts.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "No matching accounts found for \"$searchQuery\"",
                         color = TextSecondary,
                         textAlign = TextAlign.Center,
                         fontSize = 16.sp
@@ -434,8 +480,11 @@ fun AccountCard(
         KeyStoreHelper.decrypt(account.encryptedSecret) ?: ""
     }
     
-    // Calculate the TOTP code
-    val code = remember(decryptedSecret, timeRemaining) {
+    // Calculate the TOTP code (recalculate only when the 30s epoch step actually changes)
+    val timeStep = remember(timeRemaining) {
+        (System.currentTimeMillis() / 1000) / 30
+    }
+    val code = remember(decryptedSecret, timeStep) {
         if (decryptedSecret.isNotEmpty()) {
             TotpGenerator.generateTOTP(decryptedSecret) ?: "000000"
         } else {

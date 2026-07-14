@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricPrompt
+import androidx.biometric.BiometricManager
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -33,6 +34,7 @@ class MainActivity : AppCompatActivity() {
     private var isAppLocked by mutableStateOf(false)
     private var isUnlocked by mutableStateOf(false)
     private var themeSetting by mutableStateOf("system")
+    private var pendingExportType: String? = null
 
     // Default backup password key
     private val backupPassword = "aniauth_secure_pass".toCharArray()
@@ -45,9 +47,13 @@ class MainActivity : AppCompatActivity() {
             try {
                 contentResolver.openOutputStream(uri)?.use { outputStream ->
                     val accounts = repository.getAccounts()
-                    val exportJson = com.aniauth.authenticator.model.AccountSerializer.toJson(accounts)
-                    val encryptedBackup = BackupManager.encrypt(exportJson, backupPassword)
-                    outputStream.write(encryptedBackup.toByteArray(Charsets.UTF_8))
+                    val exportJson = com.aniauth.authenticator.model.AccountSerializer.toJson(accounts, decryptSecrets = true)
+                    val contentToWrite = if (pendingExportType == "decrypted") {
+                        exportJson
+                    } else {
+                        BackupManager.encrypt(exportJson, backupPassword)
+                    }
+                    outputStream.write(contentToWrite.toByteArray(Charsets.UTF_8))
                     Toast.makeText(this, "Backup exported successfully!", Toast.LENGTH_LONG).show()
                 }
             } catch (e: Exception) {
@@ -91,10 +97,21 @@ class MainActivity : AppCompatActivity() {
                     // 3. Smart Merge and Re-encryption
                     val currentAccounts = repository.getAccounts().toMutableList()
                     var mergedCount = 0
+                    var invalidCount = 0
                     
                     for (imp in importedAccounts) {
-                        // For imported items, 'encryptedSecret' field currently holds the plain secret
-                        val plainSecret = imp.encryptedSecret
+                        val importedSecret = imp.encryptedSecret
+                        
+                        // Smart Check: If the imported secret was encrypted with this device's KeyStore 
+                        // (from an older format backup), decrypt it to get the raw secret. Otherwise, 
+                        // treat it directly as a plaintext secret.
+                        val plainSecret = KeyStoreHelper.decrypt(importedSecret) ?: importedSecret
+                        
+                        // Security Safeguard: Validate if it is a valid Base32 secret
+                        if (!com.aniauth.authenticator.crypto.TotpGenerator.isValidSecret(plainSecret)) {
+                            invalidCount++
+                            continue
+                        }
                         
                         // Prevent duplicates by checking if decrypted secret matches
                         val isDuplicate = currentAccounts.any { curr ->
@@ -110,7 +127,11 @@ class MainActivity : AppCompatActivity() {
                     }
                     
                     repository.saveAccounts(currentAccounts)
-                    Toast.makeText(this, "Successfully imported $mergedCount new accounts!", Toast.LENGTH_LONG).show()
+                    if (invalidCount > 0) {
+                        Toast.makeText(this, "Imported $mergedCount accounts. Skipped $invalidCount invalid/device-locked keys.", Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(this, "Successfully imported $mergedCount new accounts!", Toast.LENGTH_LONG).show()
+                    }
                     
                     // Refresh UI
                     setContent { AppContent() }
@@ -155,7 +176,7 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     DashboardScreen(
                         repository = repository,
-                        onExportBackup = { triggerExport() },
+                        onExportBackup = { isEncrypted -> triggerExport(isEncrypted) },
                         onImportBackup = { triggerImport() },
                         onToggleLock = { enabled ->
                             getSharedPreferences("ani_auth_prefs", MODE_PRIVATE)
@@ -180,13 +201,43 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun triggerExport() {
-        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "application/json"
-            putExtra(Intent.EXTRA_TITLE, "aniauth_backup.json")
+    private fun verifyIdentityBeforeAction(title: String, subtitle: String, onSuccess: () -> Unit) {
+        val exec = ContextCompat.getMainExecutor(this)
+        val prompt = BiometricPrompt(this, exec, object : BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                super.onAuthenticationSucceeded(result)
+                onSuccess()
+            }
+        })
+        val info = BiometricPrompt.PromptInfo.Builder()
+            .setTitle(title)
+            .setSubtitle(subtitle)
+            .setAllowedAuthenticators(
+                BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            )
+            .build()
+        try {
+            prompt.authenticate(info)
+        } catch (e: Exception) {
+            onSuccess()
         }
-        createDocumentLauncher.launch(intent)
+    }
+
+    private fun triggerExport(isEncrypted: Boolean) {
+        verifyIdentityBeforeAction(
+            title = "Verify Identity",
+            subtitle = "Confirm security credentials to export accounts"
+        ) {
+            pendingExportType = if (isEncrypted) "encrypted" else "decrypted"
+            val filename = if (isEncrypted) "aniauth_backup.json" else "aniauth_decrypted_backup.json"
+            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "application/json"
+                putExtra(Intent.EXTRA_TITLE, filename)
+            }
+            createDocumentLauncher.launch(intent)
+        }
     }
 
     private fun triggerImport() {
@@ -210,7 +261,10 @@ class MainActivity : AppCompatActivity() {
         promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle("Unlock aniAuth")
             .setSubtitle("Confirm identity to view codes")
-            .setNegativeButtonText("Cancel")
+            .setAllowedAuthenticators(
+                BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            )
             .build()
     }
 

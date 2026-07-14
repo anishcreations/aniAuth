@@ -7,13 +7,18 @@ import java.util.UUID
 
 object AccountSerializer {
     
-    fun toJson(accounts: List<Account>): String {
+    fun toJson(accounts: List<Account>, decryptSecrets: Boolean = false): String {
         val array = JSONArray()
         for (acc in accounts) {
             val obj = JSONObject()
             obj.put("id", acc.id)
             obj.put("label", acc.label)
-            obj.put("encryptedSecret", acc.encryptedSecret)
+            val secret = if (decryptSecrets) {
+                com.aniauth.authenticator.crypto.KeyStoreHelper.decrypt(acc.encryptedSecret) ?: ""
+            } else {
+                acc.encryptedSecret
+            }
+            obj.put("encryptedSecret", secret)
             obj.put("username", acc.username ?: "")
             array.put(obj)
         }

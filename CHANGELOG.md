@@ -7,11 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [1.1.0]
+## [1.2.0] (2026-07-14)
+
+### Added
+- **Export Options**: Added ability to choose between secure Encrypted Backup (AES-256 encrypted with aniAuth's internal key) and Decrypted Backup (plaintext JSON).
+- **Export Verification**: Required identity verification (biometrics or device screen lock credentials) before executing the backup export flow to prevent unauthorized extraction of 2FA keys.
+- **Device Credential Fallback**: Updated biometric prompt lock screen to support device PIN, pattern, or password lock screen as a native fallback in case biometric authentication fails or biometric hardware is unavailable.
+- **Minimal Empty Dashboard State**: Hidden the Search & Timer pill header when the accounts list is completely empty, replacing it with a minimal top placeholder row that includes a direct "Import" action button.
+- **Performance Fix**: Fixed scrolling lag via in-memory KeyStore decryption caching and rate-limiting TOTP updates to only trigger on 30-second epoch ticks.
+
+### Fixed
+- **Backup Key Serialization**: Fixed backup key serialization issues to ensure exported (this version and onwards) backups can be re-imported and restored.
+
+---
+
+## [1.1.0] (2026-07-13)
 
 A major update introducing proper Light and Dark mode theme support, premium Obsidian-Violet dark mode UI, interactive theme settings dialog, and various visual design refinements.
 
 ### Added
+- **Changelog Link**: Added a clickable changelog link to the settings footer.
 - **Delete Confirmation Dialog**: Added a confirmation popup when deleting an account to prevent accidental deletions.
 - **Proper Light & Dark Theme Support**: Dynamically switch theme settings between System Default, Light Mode, and Dark Mode.
 - **Obsidian-Violet Dark Mode**: Refined the default dark theme with a warm, deep black-violet backdrop (`0xFF08070A`) and cards (`0xFF120E1A`) for a rich, premium look.
@@ -27,7 +42,7 @@ A major update introducing proper Light and Dark mode theme support, premium Obs
 
 ---
 
-## [1.0.0]
+## [1.0.0] (2026-07-13)
 
 A major upgrade introducing a feature-rich settings dashboard, interactive user manual, unified search-and-timer header, and a space-saving side-by-side clean card layout.
 
@@ -49,7 +64,7 @@ A major upgrade introducing a feature-rich settings dashboard, interactive user 
 
 ---
 
-## [0.1.0]
+## [0.1.0] (2026-07-12)
 
 Pre-release update hardening the TOTP algorithm and introducing adaptive icons.
 
@@ -63,7 +78,7 @@ Pre-release update hardening the TOTP algorithm and introducing adaptive icons.
 
 ---
 
-## [0.0.0]
+## [0.0.0] (2026-07-11)
 
 Initial pre-release development version.
 

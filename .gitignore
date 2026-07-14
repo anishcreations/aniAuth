@@ -20,3 +20,6 @@ local.properties
 
 # Kotlin files
 .kotlin/
+
+# dev note for me
+feat.md
