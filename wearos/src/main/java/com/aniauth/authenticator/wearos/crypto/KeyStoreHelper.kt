@@ -1,6 +1,5 @@
-package com.aniauth.authenticator.crypto
+package com.aniauth.authenticator.wearos.crypto
 
-import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
@@ -13,7 +12,7 @@ import javax.crypto.spec.GCMParameterSpec
 object KeyStoreHelper {
 
     private const val ANDROID_KEYSTORE = "AndroidKeyStore"
-    private const val KEY_ALIAS = "AniAuthMasterKey"
+    private const val KEY_ALIAS = "AniAuthWatchMasterKey"
     private const val TRANSFORMATION = "AES/GCM/NoPadding"
 
     private val decryptionCache = java.util.concurrent.ConcurrentHashMap<String, String>()
@@ -54,7 +53,6 @@ object KeyStoreHelper {
         val encryptedBytes = cipher.doFinal(plainText.toByteArray(Charsets.UTF_8))
         val iv = cipher.iv
         
-        // Combine IV and Encrypted bytes into a single base64 string
         val combined = ByteArray(iv.size + encryptedBytes.size)
         System.arraycopy(iv, 0, combined, 0, iv.size)
         System.arraycopy(encryptedBytes, 0, combined, iv.size, encryptedBytes.size)
@@ -66,7 +64,7 @@ object KeyStoreHelper {
         decryptionCache[cipherText]?.let { return it }
         return try {
             val combined = Base64.decode(cipherText, Base64.NO_WRAP)
-            val iv = ByteArray(12) // GCM standard IV size is 12 bytes
+            val iv = ByteArray(12)
             val encryptedBytes = ByteArray(combined.size - iv.size)
             
             System.arraycopy(combined, 0, iv, 0, iv.size)

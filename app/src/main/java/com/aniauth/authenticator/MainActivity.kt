@@ -8,6 +8,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricPrompt
 import androidx.biometric.BiometricManager
+import com.google.android.gms.wearable.Wearable
+import java.nio.charset.StandardCharsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -35,6 +37,7 @@ class MainActivity : AppCompatActivity() {
     private var isUnlocked by mutableStateOf(false)
     private var themeSetting by mutableStateOf("system")
     private var pendingExportType: String? = null
+    private var isWatchConnected by mutableStateOf(false)
 
     // Default backup password key
     private val backupPassword = "aniauth_secure_pass".toCharArray()
@@ -159,6 +162,58 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        checkWatchConnection()
+    }
+
+    private fun checkWatchConnection() {
+        Wearable.getNodeClient(this).connectedNodes
+            .addOnSuccessListener { nodes ->
+                isWatchConnected = nodes.isNotEmpty()
+            }
+            .addOnFailureListener {
+                isWatchConnected = false
+            }
+    }
+
+    private fun syncToWatch() {
+        verifyIdentityBeforeAction(
+            title = "Sync to Watch",
+            subtitle = "Verify identity to synchronize accounts"
+        ) {
+            val accounts = repository.getAccounts()
+            val json = com.aniauth.authenticator.model.AccountSerializer.toJson(accounts, decryptSecrets = true)
+            val bytes = json.toByteArray(StandardCharsets.UTF_8)
+            
+            Wearable.getNodeClient(this).connectedNodes
+                .addOnSuccessListener { nodes ->
+                    if (nodes.isEmpty()) {
+                        Toast.makeText(this, "No connected watch found.", Toast.LENGTH_SHORT).show()
+                        return@addOnSuccessListener
+                    }
+                    
+                    var sentCount = 0
+                    for (node in nodes) {
+                        Wearable.getMessageClient(this)
+                            .sendMessage(node.id, "/sync-accounts", bytes)
+                            .addOnSuccessListener {
+                                sentCount++
+                                if (sentCount == nodes.size) {
+                                    Toast.makeText(this, "Sync request sent to watch!", Toast.LENGTH_LONG).show()
+                                }
+                            }
+                            .addOnFailureListener { e ->
+                                Toast.makeText(this, "Failed to send to watch: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(this, "Error finding watch: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+
     @Composable
     private fun AppContent() {
         val darkTheme = when (themeSetting) {
@@ -194,7 +249,9 @@ class MainActivity : AppCompatActivity() {
                                 .putString("theme_setting", newTheme)
                                 .apply()
                             themeSetting = newTheme
-                        }
+                        },
+                        isWatchConnected = isWatchConnected,
+                        onSyncToWatch = { syncToWatch() }
                     )
                 }
             }

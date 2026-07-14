@@ -64,7 +64,9 @@ fun DashboardScreen(
     onToggleLock: (Boolean) -> Unit,
     isLocked: Boolean,
     themeSetting: String,
-    onThemeChange: (String) -> Unit
+    onThemeChange: (String) -> Unit,
+    isWatchConnected: Boolean = false,
+    onSyncToWatch: () -> Unit = {}
 ) {
     val context = LocalContext.current
     var accounts by remember { mutableStateOf(repository.getAccounts()) }
@@ -87,13 +89,15 @@ fun DashboardScreen(
             val currentSecond = System.currentTimeMillis() / 1000
             timeRemaining = 30L - (currentSecond % 30)
             progress = timeRemaining / 30f
-            delay(200L) 
+            delay(1000L) 
         }
     }
     
-    val filteredAccounts = accounts.filter {
-        it.label.contains(searchQuery, ignoreCase = true) ||
-        (it.username != null && it.username.contains(searchQuery, ignoreCase = true))
+    val filteredAccounts = remember(accounts, searchQuery) {
+        accounts.filter {
+            it.label.contains(searchQuery, ignoreCase = true) ||
+            (it.username != null && it.username.contains(searchQuery, ignoreCase = true))
+        }
     }
     
     Scaffold(
@@ -291,14 +295,34 @@ fun DashboardScreen(
                         .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "Scan a QR code or tap + to add an account.\nYou can also import backups using the\nbutton above or in Settings.",
-                        color = TextSecondary,
-                        textAlign = TextAlign.Center,
-                        fontSize = 14.sp,
-                        lineHeight = 20.sp,
-                        modifier = Modifier.fillMaxWidth(0.8f)
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Scan a QR code or tap + to add an account.\nYou can also import backups using the\nbutton above or in Settings.",
+                            color = TextSecondary,
+                            textAlign = TextAlign.Center,
+                            fontSize = 14.sp,
+                            lineHeight = 20.sp,
+                            modifier = Modifier.fillMaxWidth(0.8f)
+                        )
+                        Spacer(modifier = Modifier.height(24.dp))
+                        val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+                        Text(
+                            text = "aniAuth v1.3.0",
+                            color = TextSecondary.copy(alpha = 0.3f),
+                            fontSize = 11.sp,
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                            modifier = Modifier.clickable {
+                                try {
+                                    uriHandler.openUri("https://github.com/anishcreations/aniAuth/blob/main/CHANGELOG.md")
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
+                        )
+                    }
                 }
             } else if (filteredAccounts.isEmpty()) {
                 Box(
@@ -320,7 +344,7 @@ fun DashboardScreen(
                         .fillMaxWidth()
                         .weight(1f),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
-                    contentPadding = PaddingValues(top = 4.dp, bottom = 100.dp)
+                    contentPadding = PaddingValues(top = 4.dp, bottom = 16.dp)
                 ) {
                     items(filteredAccounts, key = { it.id }) { account ->
                         AccountCard(
@@ -340,7 +364,7 @@ fun DashboardScreen(
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 24.dp)
+                                .padding(top = 24.dp, bottom = 12.dp)
                         ) {
                             Row(
                                 modifier = Modifier.padding(16.dp),
@@ -356,6 +380,30 @@ fun DashboardScreen(
                                     fontWeight = FontWeight.Medium
                                 )
                             }
+                        }
+                    }
+                    
+                    item {
+                        val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp, bottom = 72.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "aniAuth v1.3.0",
+                                color = SoftFooterColor.copy(alpha = 0.3f),
+                                fontSize = 11.sp,
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                modifier = Modifier.clickable {
+                                    try {
+                                        uriHandler.openUri("https://github.com/anishcreations/aniAuth/blob/main/CHANGELOG.md")
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                    }
+                                }
+                            )
                         }
                     }
                 }
@@ -400,7 +448,9 @@ fun DashboardScreen(
             onToggleLock = onToggleLock,
             onShowManual = { showManual = true },
             themeSetting = themeSetting,
-            onThemeChange = onThemeChange
+            onThemeChange = onThemeChange,
+            isWatchConnected = isWatchConnected,
+            onSyncToWatch = onSyncToWatch
         )
     }
 

@@ -35,7 +35,9 @@ fun SettingsScreen(
     onToggleLock: (Boolean) -> Unit,
     onShowManual: () -> Unit,
     themeSetting: String,
-    onThemeChange: (String) -> Unit
+    onThemeChange: (String) -> Unit,
+    isWatchConnected: Boolean = false,
+    onSyncToWatch: () -> Unit = {}
 ) {
     val context = LocalContext.current
     var showPrivacyDialog by remember { mutableStateOf(false) }
@@ -91,6 +93,14 @@ fun SettingsScreen(
                         subtitle = "Securely save your accounts to a file",
                         onClick = { showExportDialog = true }
                     )
+                    if (isWatchConnected) {
+                        SettingsItem(
+                            icon = Icons.Default.Watch,
+                            title = "Sync to Watch",
+                            subtitle = "Securely sync accounts to Wear OS",
+                            onClick = onSyncToWatch
+                        )
+                    }
                 }
             }
 
@@ -171,14 +181,14 @@ fun SettingsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        "aniAuth v1.2.0",
+                        "aniAuth v1.3.0",
                         modifier = Modifier
                             .clickable {
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/anishcreations/aniAuth/blob/main/CHANGELOG.md"))
                                 context.startActivity(intent)
                             }
                             .padding(horizontal = 8.dp, vertical = 4.dp),
-                        color = TextSecondary,
+                        color = TextSecondary.copy(alpha = 0.5f),
                         fontSize = 12.sp
                     )
                 }

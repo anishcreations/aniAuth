@@ -12,8 +12,9 @@ android {
         applicationId = "com.aniauth.authenticator"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.2.0"
+        versionCode = 4
+        versionName = "1.3.0"
+        resourceConfigurations.addAll(listOf("en"))
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -23,7 +24,8 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -64,6 +66,9 @@ dependencies {
     // Biometrics
     implementation("androidx.biometric:biometric:1.2.0-alpha05")
 
+    // Wear OS Integration
+    implementation("com.google.android.gms:play-services-wearable:18.2.0")
+
     // CameraX
     val cameraVersion = "1.4.1"
     implementation("androidx.camera:camera-camera2:$cameraVersion")
@@ -71,8 +76,8 @@ dependencies {
     implementation("androidx.camera:camera-view:$cameraVersion")
     implementation("androidx.camera:camera-mlkit-vision:$cameraVersion")
 
-    // ML Kit Barcode Scanning
-    implementation("com.google.mlkit:barcode-scanning:17.3.0")
+    // ML Kit Barcode Scanning (using thin client via Google Play Services to save ~10MB)
+    implementation("com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.0")
 
     // Local Testing
     testImplementation("junit:junit:4.13.2")

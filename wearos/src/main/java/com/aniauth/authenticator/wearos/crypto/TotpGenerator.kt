@@ -1,4 +1,4 @@
-package com.aniauth.authenticator.crypto
+package com.aniauth.authenticator.wearos.crypto
 
 import java.nio.ByteBuffer
 import javax.crypto.Mac
@@ -21,7 +21,6 @@ object TotpGenerator {
         
         val timeStep = timestamp / timeInterval
         
-        // Convert timeStep to an 8-byte byte array
         val buffer = ByteBuffer.allocate(8)
         buffer.putLong(timeStep)
         val timeBytes = buffer.array()
@@ -32,7 +31,6 @@ object TotpGenerator {
             mac.init(keySpec)
             val hash = mac.doFinal(timeBytes)
             
-            // Dynamic truncation
             val offset = (hash[hash.size - 1].toInt() and 0xf)
             val binary = (
                 ((hash[offset].toInt() and 0x7f) shl 24) or
@@ -61,9 +59,8 @@ object TotpGenerator {
         
         for (char in clean) {
             val valIndex = base32Chars.indexOf(char)
-            if (valIndex == -1) return null // Invalid Base32 character
+            if (valIndex == -1) return null
             
-            // Mask with 0xFFFF to prevent integer overflow and sign extension issues
             buffer = ((buffer shl 5) or valIndex) and 0xFFFF
             bitsLeft += 5
             if (bitsLeft >= 8) {
