@@ -1,4 +1,4 @@
-# aniAuth Wear OS Companion ⌚
+# aniAuth Wear OS Companion 
 
 Welcome to the dedicated documentation page for the **aniAuth Wear OS Companion** app (`v1.0.0`). 
 
@@ -6,18 +6,18 @@ This companion module allows you to securely view your 2FA TOTP codes directly o
 
 ---
 
-## 📖 Table of Contents
-- [Key Features](#-key-features)
-- [How It Works (Architecture)](#-how-it-works-architecture)
-- [Security & Threat Model](#-security--threat-model)
-- [Getting Started & Syncing](#-getting-started--syncing)
-- [Codebase Structure](#-codebase-structure)
-- [Changelog](#-changelog)
-- [Troubleshooting](#-troubleshooting)
+## Table of Contents
+- [Key Features](#key-features)
+- [How It Works: Architecture](#how-it-works-architecture)
+- [Security and Threat Model](#security-and-threat-model)
+- [Installation and Syncing Guide](#installation-and-syncing-guide)
+- [Codebase Structure](#codebase-structure)
+- [Changelog](#changelog)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
-## ✨ Key Features
+## Key Features
 - **Instant Wrist Codes:** View live 6-digit TOTP codes with a clean, circular Wear OS interface optimized for round screens.
 - **Obsidian-Violet Styling:** A beautiful, dark AMOLED theme using the same Obsidian-Violet palette as the phone app (`Color(0xFF08070A)` background, `Color(0xFFC084FC)` accents).
 - **Fully Offline After Sync:** Once synced, your watch generates TOTP codes independently using its own local clock and local copy of the RFC 6238 algorithm — no phone or internet connection needed.
@@ -27,7 +27,7 @@ This companion module allows you to securely view your 2FA TOTP codes directly o
 
 ---
 
-## 🛠️ How It Works (Architecture)
+## How It Works: Architecture
 
 The companion app runs as a completely separate Gradle module (`:wearos`) with its own independent copies of all crypto and model classes — it shares zero runtime code with the phone `:app` module. The two apps communicate exclusively over Google's **Wearable Data Layer API**.
 
@@ -78,7 +78,7 @@ After the initial sync, the watch is 100% self-sufficient:
 
 ---
 
-## 🔒 Security & Threat Model
+## Security and Threat Model
 
 ### What happens if someone steals my watch?
 
@@ -123,12 +123,59 @@ After the initial sync, the watch is 100% self-sufficient:
 
 ---
 
-## 🚀 Getting Started & Syncing
+## Installation and Syncing Guide
 
-### First-Time Setup
-1. Build and install **aniAuth** on both your phone and your Wear OS watch.
-2. Open the **aniAuth** app on your watch. You'll be prompted to **create a 4-digit PIN**.
-3. Confirm the PIN. You'll see a clean empty state: *"No accounts synced. Tap 'Sync to Watch' on your phone app."*
+### Watch Installation Guide
+You can install the Wear OS companion app using one of the following methods:
+
+#### Method 1: Sideloading Pre-built APK via ADB over Wi-Fi
+If you downloaded the pre-built `aniAuth-wear-v1.0.0.apk` from GitHub Releases, you can install it using a terminal/command prompt:
+
+1. **Install Android Platform Tools (ADB)**:
+   - **macOS**: Install using Homebrew:
+     ```bash
+     brew install android-platform-tools
+     ```
+   - **Windows***: Download the official [SDK Platform-Tools for Windows](https://developer.android.com/tools/releases/platform-tools), extract the zip, and open Command Prompt/PowerShell inside the extracted folder.
+   - **Linux***: Install via your package manager:
+     ```bash
+     # Debian / Ubuntu
+     sudo apt install android-tools-adb
+     # Fedora / RHEL
+     sudo dnf install android-tools
+     ```
+2. **Enable Developer Options on your Watch**:
+   - On your Watch, go to **Settings** > **System** > **About**.
+   - Scroll down and tap **Build number** 7 times until you see a prompt: *"Developer options enabled"*.
+3. **Enable Wi-Fi/Wireless Debugging**:
+   - Go back to **Settings** > **Developer options**.
+   - Turn on **ADB debugging** and **Wireless debugging**.
+   - Make sure both your Watch and your Mac are connected to the **same Wi-Fi network**.
+4. **Connect your Mac to the Watch**:
+   - Tap **Wireless debugging** on the watch to view your watch's IP address and Port (e.g. `192.168.1.100:5555`).
+   - Open Terminal on your Mac and connect by running:
+     ```bash
+     adb connect <watch-ip>:<port>
+     ```
+   - Keep an eye on your watch face and select **Always allow from this computer** when the authorization prompt pops up.
+5. **Install the watch APK**:
+   - Run the install command with the path to your downloaded watch APK:
+     ```bash
+     adb install aniAuth-wear-v1.0.0.apk
+     ```
+
+#### Method 2: Running via Android Studio (From Source)
+1. Open the **aniAuth** project folder in **Android Studio**.
+2. Pair/connect your watch via Wireless Debugging in the Android Studio Device Manager.
+3. Select `:wearos` in the module build configurations dropdown at the top.
+4. Select your watch as the destination device and click the green **Run** (Play) button.
+
+---
+
+### First-Time Watch Setup
+1. Open the **aniAuth** app on your Watch.
+2. You will be prompted to **create a 4-digit security PIN**.
+3. Confirm the PIN. You will see a clean empty dashboard: *"No accounts synced. Tap 'Sync to Watch' on your phone app."*
 
 ### Syncing Accounts
 4. Open the aniAuth phone app → **Settings** → scroll to *Data & Backup*.
@@ -142,7 +189,7 @@ After the initial sync, the watch is 100% self-sufficient:
 
 ---
 
-## 📁 Codebase Structure
+## Codebase Structure
 
 ```
 wearos/
@@ -179,7 +226,7 @@ wearos/
 └── build.gradle.kts
 ```
 
-## 📋 Changelog
+## Changelog
 
 ### [1.0.0] (2026-07-14) — Initial Release
 
@@ -197,7 +244,7 @@ wearos/
 
 ---
 
-## ❓ Troubleshooting
+## Troubleshooting
 
 ### The "Sync to Watch" option doesn't show up in phone Settings!
 - Make sure **Bluetooth** is enabled on both devices.

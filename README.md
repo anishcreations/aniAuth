@@ -18,23 +18,28 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/anishcreations/aniAuth/releases/tag/v1.3.0"><img src="https://img.shields.io/badge/Phone_Release-v1.3.0-purple?style=for-the-badge&logo=android&logoColor=white" alt="Phone Release" /></a>
+  <a href="https://github.com/anishcreations/aniAuth/releases#release-wear-v1.0.0"><img src="https://img.shields.io/badge/Wear_OS_Release-v1.0.0-blueviolet?style=for-the-badge&logo=android&logoColor=white" alt="Wear OS Release" /></a>
+</p>
+
+<p align="center">
   aniAuth is a local-first, privacy-focused 2FA authenticator combining aesthetic UI designs with hardware-backed encryption to secure your accounts on your phone and watch.
 </p>
 
 ---
 
 > [!NOTE]
-> See [CHANGELOG.md](CHANGELOG.md) for detailed version updates, and check [WEAROS.md](WEAROS.md) for full details on the Wear OS companion app setup, security, and features.
+> For release logs, see [CHANGELOG.md](CHANGELOG.md). All details regarding the Wear OS companion app (features, setup, security, and codebase structure) can be found in [WEAROS.md](WEAROS.md).
 
 ## Table of Contents
 - [Features](#features)
 - [Wear OS Companion App](WEAROS.md)
-- [Security & Threat Model](#security--threat-model)
+- [Security and Threat Model](#security-and-threat-model)
 - [Codebase Structure](#codebase-structure)
-- [Compatibility & Imports](#compatibility--imports)
+- [Compatibility and Imports](#compatibility-and-imports)
 - [How It Works Under the Hood](#how-it-works-under-the-hood)
-- [Build & Installation](#build--installation)
-- [Contact & Feedback](#contact--feedback)
+- [Build and Installation](#build-and-installation)
+- [Contact and Feedback](#contact-and-feedback)
 - [License](#license)
 
 ---
@@ -63,7 +68,7 @@
 
 ---
 
-## Security & Threat Model
+## Security and Threat Model
 
 ### 1. Data Encryption (At Rest)
 All account data is stored locally in `SharedPreferences`. The raw shared secrets are encrypted using the AES/GCM/NoPadding cipher.
@@ -135,7 +140,7 @@ aniAuth/
 
 ---
 
-## Compatibility & Imports
+## Compatibility and Imports
 
 aniAuth makes migrating from other password managers and authenticators seamless by offering smart one-way imports:
 * **Bitwarden Vault Exports**: Import Bitwarden's JSON vaults directly. The app will extract TOTP secrets from the standard `login.totp` field nested inside items.
@@ -190,7 +195,7 @@ The `AccountSerializer.fromJson()` parser handles multiple formats:
 4. **Re-encryption**: On import, `MainActivity` validates each secret via `TotpGenerator.isValidSecret()`, encrypts valid keys with the device's KeyStore, and skips invalid/un-decodable entries (reporting the skip count to the user).
 
 ### 5. Wear OS Sync Flow
-> For full Wear OS companion documentation, see [WEAROS.md](WEAROS.md).
+> For full details on the watch companion module, see [WEAROS.md](WEAROS.md).
 
 1. The phone app queries `Wearable.getNodeClient()` to detect connected watches. The "Sync to Watch" settings row only appears when a paired node is found.
 2. On tap, biometric authentication is required. After verification, `AccountSerializer.toJson(accounts, decryptSecrets = true)` produces a JSON payload with plaintext Base32 secrets.
@@ -198,7 +203,12 @@ The `AccountSerializer.fromJson()` parser handles multiple formats:
 4. On the watch, `WearSyncService` (a `WearableListenerService`) receives the message, validates each secret via `TotpGenerator.isValidSecret()`, re-encrypts each key using the **watch's own independent KeyStore master key** (alias: `AniAuthWatchMasterKey`), and saves the encrypted accounts to the watch's local `SharedPreferences`.
 5. The watch then generates TOTP codes independently using its own local clock and its own copy of `TotpGenerator` — no phone connection required after the initial sync.
 
-## 🛠 Build & Installation
+## Build and Installation
+
+### Pre-built Downloads
+Skip compiling from source and grab the latest pre-compiled packages directly:
+* 📱 **Android Phone App**: [aniAuth-phone-v1.3.0.apk](https://github.com/anishcreations/aniAuth/releases/tag/v1.3.0)
+* ⌚ **Wear OS Companion App**: [aniAuth-wear-v1.0.0.apk](https://github.com/anishcreations/aniAuth/releases#release-wear-v1.0.0) — *(See [Watch Installation & Sideloading Guide](WEAROS.md#watch-installation-guide))*
 
 ### Prerequisites
 * **JDK 17** or higher
@@ -220,7 +230,7 @@ The `AccountSerializer.fromJson()` parser handles multiple formats:
    ./gradlew installDebug
    ```
 
-## Contact & Feedback
+## Contact and Feedback
 
 If you encounter bugs, have feature suggestions, or want to share feedback:
 * **Email**: Contact us at [anish.creations.hq@gmail.com](mailto:anish.creations.hq@gmail.com?subject=%5BaniAuth%20Android%5D%20Support%20/%20Feedback). Please keep the prefilled subject line intact.

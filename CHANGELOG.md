@@ -6,16 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-(Current android phone version: 1.3.0)
-(Current [Wear OS](WEAROS.md) app version: 1.0.0)
+* 📱 **Latest Released (Phone)**: [v1.3.0](https://github.com/anishcreations/aniAuth/releases/tag/v1.3.0)
+* ⌚ **Latest Released (Wear OS)**: [v1.0.0](https://github.com/anishcreations/aniAuth/releases#release-wear-v1.0.0) 
+> **To check full Watch Changelog: [Click Here](WEAROS.md#changelog)**
 
-## [1.3.0] (2026-07-14)
+---
+## [1.3.0] (2026-07-15)
+*(Last updated: 2026-07-16)*
 
 ### Added
 - **Wear OS Companion App Support**: Integrated the brand new `:wearos` watch module (`v1.0.0`) to view live 2FA codes directly on Galaxy/Wear OS (WEAROS.md) watches.
 - **Watch Sync Integration**: Added an opt-in "Sync to Watch" action in the phone's Settings screen (visible when a watch node is detected), protected by biometric authentication, to transmit accounts securely via the Google Wearable Data Layer.
 - **App Version Footers**: Added clickable version footer links directly on both the phone settings screen and the main dashboard list.
-- **Documentation**: Created [WEAROS.md](WEAROS.md) detailing companion app setup, TEE KeyStore encryption models, offline sync mechanics, and troubleshooting.
+- **Documentation**: Created [WEAROS.md](WEAROS.md) (detailing companion app setup, TEE KeyStore encryption models, offline sync mechanics, and troubleshooting), added prominent release badges to the README, and introduced a detailed Wear OS wireless ADB sideloading guide.
 
 ### Optimized
 - **APK Size & Packaging**: Switched to Play Services ML Kit to save **~10MB**. Enabled R8 code minification, resource shrinking, and English-only resource filtering to minimize the app footprint.
