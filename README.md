@@ -55,6 +55,10 @@
 - **Biometric & Device Lock**: Optional biometric prompt (fingerprint or face unlock) required on app startup, with native device credentials (PIN/pattern/password) fallback to prevent lockouts.
 - **Zero Network Footprint**: Fully offline. The app requests no internet permission whatsoever. (Note: Google Play Services handles ML model downloads at the OS level, keeping the app completely sandboxed from the network).
 
+### Wear OS Integration
+- **Biometric Syncing**: Wirelessly transfer accounts from phone to watch via Bluetooth, protected by the phone's biometric verification.
+- **Customizable Duress PIN**: Configure the maximum allowed PIN attempts (e.g., 3, 6, 9, or unlimited) on your watch directly from the phone app. If the limit is exceeded, all watch accounts are silently wiped to protect your data.
+
 ### Aesthetic UI/UX
 - **Aesthetic Light & Dark Themes**: Modern, high-contrast themes built with Jetpack Compose Material 3. Features a premium "Obsidian-Violet" dark mode, and a sleek, high-readability light mode.
 - **Dynamic Theme Selector**: Choose between Light Mode, Dark Mode, or System Default dynamically in the settings panel.

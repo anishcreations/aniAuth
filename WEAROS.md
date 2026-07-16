@@ -1,6 +1,6 @@
 # aniAuth Wear OS Companion 
 
-Welcome to the dedicated documentation page for the **aniAuth Wear OS Companion** app (`v1.0.0`). 
+Welcome to the dedicated documentation page for the **aniAuth Wear OS Companion** app (`v1.1.0`). 
 
 This companion module allows you to securely view your 2FA TOTP codes directly on your wrist (designed primarily for Galaxy Watch and Wear OS devices).
 
@@ -23,7 +23,8 @@ This companion module allows you to securely view your 2FA TOTP codes directly o
 - **Fully Offline After Sync:** Once synced, your watch generates TOTP codes independently using its own local clock and local copy of the RFC 6238 algorithm — no phone or internet connection needed.
 - **Zero Scroll Lag:** Employs a self-contained `GlobalTimerHeader` composable (with its own isolated `LaunchedEffect` timer at 500ms intervals) so the account list only recomposes once every 30 seconds when TOTP codes actually change.
 - **Biometric-Protected Syncing:** Transfer accounts wirelessly from your phone with a single tap, protected by your phone's biometric/device credential locks.
-- **Instant Lock Passcode:** Secures your keys with a 4-digit PIN setup featuring iOS-style circular dot indicators. Locks instantly via `onPause()` on screen dim, backgrounding, or side-button presses.
+- **Rotary Bezel Support:** Navigate through your accounts smoothly using your watch's physical rotating bezel or digital crown.
+- **Instant Lock & Duress Wipe:** Secures your keys with a 4-digit PIN setup featuring iOS-style circular dot indicators. Locks instantly via `onPause()` on screen dim, backgrounding, or side-button presses. Includes a duress limit that silently wipes accounts after a customizable number of incorrect attempts (configured via the phone app).
 
 ---
 
@@ -228,19 +229,21 @@ wearos/
 
 ## Changelog
 
+### [1.1.0] (2026-07-17)
+
+- **Rotary Bezel Scrolling**: Added support for physical rotary dial/RSB and bezel rotation on Wear OS devices (like Galaxy Watch) using Jetpack Compose FocusRequester.
+- **Duress PIN & Silent Wipe**: Implemented duress protection that silently clears all synced accounts behind the scenes after a customizable number of incorrect PIN attempts, displaying a "Reset PIN" visual option at the bottom to recreate the passcode.
+- **Centered Layout**: Centered the setup and lock screens UI.
+- **Auto-Sync Reliability**: Moved the SharedPreferences observer to a strong activity-level reference, resolving a garbage collection bug that disrupted real-time dashboard updates.
+
 ### [1.0.0] (2026-07-14) — Initial Release
 
-#### Added
-- **Wear OS Module**: Fully standalone watch companion app layout, sync service, and UI flow.
-- **PIN Lock Screen**: Secure 4-digit lock screen featuring glowing passcode dots and instant locking.
-- **Watch Dashboard**: AMOLED-optimized account list and custom timer header to display synced 2FA codes.
-- **Lightweight Keypad**: Replaced heavy material buttons with compact grid keys for snappy digit entry.
-
-#### Optimized
-- **Scroll Performance**: Decoupled the progress countdown loop and cached decrypted secrets in-memory to ensure lag-free scrolling.
-- **Unlock Latency**: Cached PIN and KeyStore references in-memory to bypass slow cryptography lags on digit entry.
-- **Reactive Background Sync**: Updates the watch dashboard dynamically when phone-side sync occurs.
-- **Package Size & Overscroll**: Configured unextracted native libraries to save watch storage and snugged scroll padding to prevent empty list spaces.
+First official release of the aniAuth Wear OS companion app, featuring:
+- **AMOLED-Optimized Dashboard**: Displays synced 2FA codes in a clean list with a circular count-down timer.
+- **4-Digit PIN Lock**: Secure lock screen featuring glowing passcode dots and instant locking on screen timeout/dim.
+- **Lightweight Keypad**: Replaced heavy Material buttons with compact grid keys for snappy entry.
+- **Re-encryption Engine**: Re-encrypts incoming secrets with watch-specific hardware-backed KeyStore master key (AES-256-GCM).
+- **Offline Code Generation**: Computes TOTP codes locally on your wrist, working fully offline without active Bluetooth.
 
 ---
 

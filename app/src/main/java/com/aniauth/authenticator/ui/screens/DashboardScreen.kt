@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -310,7 +311,7 @@ fun DashboardScreen(
                         Spacer(modifier = Modifier.height(24.dp))
                         val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
                         Text(
-                            text = "aniAuth v1.3.0",
+                            text = "aniAuth v1.4.0",
                             color = TextSecondary.copy(alpha = 0.3f),
                             fontSize = 11.sp,
                             fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
@@ -392,7 +393,7 @@ fun DashboardScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "aniAuth v1.3.0",
+                                text = "aniAuth v1.4.0",
                                 color = SoftFooterColor.copy(alpha = 0.3f),
                                 fontSize = 11.sp,
                                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
@@ -412,6 +413,9 @@ fun DashboardScreen(
     }
     
     if (showAddDialog) {
+        BackHandler {
+            showAddDialog = false
+        }
         AddAccountScreen(
             onDismiss = { showAddDialog = false },
             onAdd = { label, secret, issuer, username ->
@@ -423,6 +427,9 @@ fun DashboardScreen(
     }
 
     if (showScanner) {
+        BackHandler {
+            showScanner = false
+        }
         ScannerScreen(
             onQrCodeDetected = { qrData ->
                 val parsed = OtpAuthParser.parse(qrData)
@@ -440,6 +447,9 @@ fun DashboardScreen(
     }
 
     if (showSettings) {
+        BackHandler {
+            showSettings = false
+        }
         SettingsScreen(
             onDismiss = { showSettings = false },
             onExport = onExportBackup,
@@ -455,10 +465,16 @@ fun DashboardScreen(
     }
 
     if (showManual) {
+        BackHandler {
+            showManual = false
+        }
         UserManualDialog(onDismiss = { showManual = false })
     }
 
     selectedAccountForDetails?.let { account ->
+        BackHandler {
+            selectedAccountForDetails = null
+        }
         AccountDetailsScreen(
             account = account,
             onDismiss = { selectedAccountForDetails = null },

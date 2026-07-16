@@ -10,7 +10,9 @@ import com.aniauth.authenticator.wearos.crypto.TotpGenerator
 import com.aniauth.authenticator.wearos.model.Account
 import com.aniauth.authenticator.wearos.model.WatchRepository
 import org.json.JSONArray
+import org.json.JSONObject
 import java.nio.charset.StandardCharsets
+import android.content.Context
 
 class WearSyncService : WearableListenerService() {
 
@@ -18,12 +20,30 @@ class WearSyncService : WearableListenerService() {
         if (messageEvent.path == "/sync-accounts") {
             val jsonString = String(messageEvent.data, StandardCharsets.UTF_8)
             try {
-                val array = JSONArray(jsonString)
+                val accountsArray: JSONArray
+                var maxAttempts: Int? = null
+                
+                if (jsonString.trim().startsWith("{")) {
+                    val obj = JSONObject(jsonString)
+                    accountsArray = obj.getJSONArray("accounts")
+                    if (obj.has("maxFailedAttempts")) {
+                        maxAttempts = obj.getInt("maxFailedAttempts")
+                    }
+                } else {
+                    accountsArray = JSONArray(jsonString)
+                }
+
+                // Update max attempts if sent from phone
+                if (maxAttempts != null) {
+                    val lockPrefs = getSharedPreferences("watch_lock_pref", Context.MODE_PRIVATE)
+                    lockPrefs.edit().putInt("max_failed_attempts", maxAttempts).apply()
+                }
+
                 val newAccounts = mutableListOf<Account>()
                 var invalidCount = 0
                 
-                for (i in 0 until array.length()) {
-                    val obj = array.getJSONObject(i)
+                for (i in 0 until accountsArray.length()) {
+                    val obj = accountsArray.getJSONObject(i)
                     val label = obj.getString("label")
                     val plainSecret = obj.getString("encryptedSecret").trim()
                     
@@ -78,10 +98,12 @@ class WearSyncService : WearableListenerService() {
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+                val errorMsg = e.message ?: e.toString()
+                android.util.Log.e("WearSyncService", "Sync error: ", e)
                 Handler(Looper.getMainLooper()).post {
                     Toast.makeText(
                         applicationContext,
-                        "Failed to sync accounts: corrupted data.",
+                        "Sync failed: $errorMsg",
                         Toast.LENGTH_LONG
                     ).show()
                 }

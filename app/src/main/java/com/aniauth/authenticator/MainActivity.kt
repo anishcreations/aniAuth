@@ -16,6 +16,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import com.aniauth.authenticator.crypto.BackupManager
 import com.aniauth.authenticator.crypto.KeyStoreHelper
 import com.aniauth.authenticator.model.AccountRepository
@@ -38,6 +39,9 @@ class MainActivity : AppCompatActivity() {
     private var themeSetting by mutableStateOf("system")
     private var pendingExportType: String? = null
     private var isWatchConnected by mutableStateOf(false)
+    private var isNavigatingForFile = false
+    private var activeBiometricPrompt: BiometricPrompt? = null
+    private var pendingAuthenticationAction: (() -> Unit)? = null
 
     // Default backup password key
     private val backupPassword = "aniauth_secure_pass".toCharArray()
@@ -156,15 +160,26 @@ class MainActivity : AppCompatActivity() {
 
         setupBiometrics()
         setContent { AppContent() }
-
-        if (isAppLocked) {
-            authenticateBiometric()
-        }
     }
 
     override fun onResume() {
         super.onResume()
         checkWatchConnection()
+        
+        if (isAppLocked) {
+            if (isNavigatingForFile) {
+                isNavigatingForFile = false
+            } else {
+                isUnlocked = false
+                authenticateBiometric()
+            }
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        activeBiometricPrompt?.cancelAuthentication()
+        activeBiometricPrompt = null
     }
 
     private fun checkWatchConnection() {
@@ -183,8 +198,18 @@ class MainActivity : AppCompatActivity() {
             subtitle = "Verify identity to synchronize accounts"
         ) {
             val accounts = repository.getAccounts()
-            val json = com.aniauth.authenticator.model.AccountSerializer.toJson(accounts, decryptSecrets = true)
-            val bytes = json.toByteArray(StandardCharsets.UTF_8)
+            val accountsJson = com.aniauth.authenticator.model.AccountSerializer.toJson(accounts, decryptSecrets = true)
+            
+            // Retrieve max attempts setting
+            val maxAttempts = getSharedPreferences("ani_auth_prefs", MODE_PRIVATE)
+                .getInt("watch_max_failed_attempts", 3)
+            
+            // Build combined JSON payload
+            val combinedObj = org.json.JSONObject()
+            combinedObj.put("accounts", org.json.JSONArray(accountsJson))
+            combinedObj.put("maxFailedAttempts", maxAttempts)
+            
+            val bytes = combinedObj.toString().toByteArray(StandardCharsets.UTF_8)
             
             Wearable.getNodeClient(this).connectedNodes
                 .addOnSuccessListener { nodes ->
@@ -234,20 +259,18 @@ class MainActivity : AppCompatActivity() {
                         onExportBackup = { isEncrypted -> triggerExport(isEncrypted) },
                         onImportBackup = { triggerImport() },
                         onToggleLock = { enabled ->
-                            getSharedPreferences("ani_auth_prefs", MODE_PRIVATE)
-                                .edit()
-                                .putBoolean("app_lock_enabled", enabled)
-                                .apply()
+                            getSharedPreferences("ani_auth_prefs", MODE_PRIVATE).edit {
+                                putBoolean("app_lock_enabled", enabled)
+                            }
                             isAppLocked = enabled
                             if (enabled) isUnlocked = false
                         },
                         isLocked = isAppLocked,
                         themeSetting = themeSetting,
                         onThemeChange = { newTheme ->
-                            getSharedPreferences("ani_auth_prefs", MODE_PRIVATE)
-                                .edit()
-                                .putString("theme_setting", newTheme)
-                                .apply()
+                            getSharedPreferences("ani_auth_prefs", MODE_PRIVATE).edit {
+                                putString("theme_setting", newTheme)
+                            }
                             themeSetting = newTheme
                         },
                         isWatchConnected = isWatchConnected,
@@ -259,13 +282,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun verifyIdentityBeforeAction(title: String, subtitle: String, onSuccess: () -> Unit) {
-        val exec = ContextCompat.getMainExecutor(this)
-        val prompt = BiometricPrompt(this, exec, object : BiometricPrompt.AuthenticationCallback() {
-            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                super.onAuthenticationSucceeded(result)
-                onSuccess()
-            }
-        })
+        pendingAuthenticationAction = onSuccess
+        activeBiometricPrompt = biometricPrompt
         val info = BiometricPrompt.PromptInfo.Builder()
             .setTitle(title)
             .setSubtitle(subtitle)
@@ -275,8 +293,10 @@ class MainActivity : AppCompatActivity() {
             )
             .build()
         try {
-            prompt.authenticate(info)
-        } catch (e: Exception) {
+            biometricPrompt.authenticate(info)
+        } catch (_: Exception) {
+            activeBiometricPrompt = null
+            pendingAuthenticationAction = null
             onSuccess()
         }
     }
@@ -293,6 +313,7 @@ class MainActivity : AppCompatActivity() {
                 type = "application/json"
                 putExtra(Intent.EXTRA_TITLE, filename)
             }
+            isNavigatingForFile = true
             createDocumentLauncher.launch(intent)
         }
     }
@@ -302,6 +323,7 @@ class MainActivity : AppCompatActivity() {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "*/*"
         }
+        isNavigatingForFile = true
         openDocumentLauncher.launch(intent)
     }
 
@@ -311,7 +333,19 @@ class MainActivity : AppCompatActivity() {
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
-                    isUnlocked = true
+                    activeBiometricPrompt = null
+                    val action = pendingAuthenticationAction
+                    pendingAuthenticationAction = null
+                    if (action != null) {
+                        action.invoke()
+                    } else {
+                        isUnlocked = true
+                    }
+                }
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                    super.onAuthenticationError(errorCode, errString)
+                    activeBiometricPrompt = null
+                    pendingAuthenticationAction = null
                 }
             })
 
@@ -326,9 +360,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun authenticateBiometric() {
+        pendingAuthenticationAction = { isUnlocked = true }
+        activeBiometricPrompt = biometricPrompt
         try {
             biometricPrompt.authenticate(promptInfo)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
+            activeBiometricPrompt = null
+            pendingAuthenticationAction = null
             isUnlocked = true
         }
     }

@@ -1,6 +1,7 @@
 package com.aniauth.authenticator.wearos
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -33,6 +34,12 @@ import com.aniauth.authenticator.wearos.crypto.TotpGenerator
 import com.aniauth.authenticator.wearos.model.Account
 import com.aniauth.authenticator.wearos.model.WatchRepository
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.foundation.focusable
+import androidx.compose.ui.input.rotary.onRotaryScrollEvent
+import androidx.compose.foundation.gestures.scrollBy
 
 class MainActivity : ComponentActivity() {
 
@@ -40,9 +47,19 @@ class MainActivity : ComponentActivity() {
     private var isUnlocked = mutableStateOf(false)
     private var cachedCorrectPin: String? = null
 
+    private val accountsState = mutableStateOf<List<Account>>(emptyList())
+
+    private val preferenceListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == "accounts_json") {
+            accountsState.value = repository.getAccounts()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         repository = WatchRepository(this)
+        accountsState.value = repository.getAccounts()
+        repository.prefs.registerOnSharedPreferenceChangeListener(preferenceListener)
 
         // Pre-decrypt PIN on startup once to avoid blocking KeyStore lag during entry
         val prefs = getSharedPreferences("watch_lock_pref", Context.MODE_PRIVATE)
@@ -74,10 +91,13 @@ class MainActivity : ComponentActivity() {
                         PinLockScreen(
                             onCorrectPin = {
                                 isUnlocked.value = true
+                            },
+                            onDataWiped = {
+                                showSetup = true
                             }
                         )
                     } else {
-                        WatchDashboard(repository)
+                        WatchDashboard(accountsState.value)
                     }
                 }
             }
@@ -88,6 +108,11 @@ class MainActivity : ComponentActivity() {
         super.onPause()
         // INSTANT LOCK TRIGGER: Lock the app immediately when backgrounded or screen dims
         isUnlocked.value = false
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        repository.prefs.unregisterOnSharedPreferenceChangeListener(preferenceListener)
     }
 
     private fun checkHasPin(): Boolean {
@@ -102,9 +127,57 @@ class MainActivity : ComponentActivity() {
         cachedCorrectPin = pin // Cache in memory immediately
     }
 
+    fun getMaxFailedAttempts(): Int {
+        val prefs = getSharedPreferences("watch_lock_pref", Context.MODE_PRIVATE)
+        return prefs.getInt("max_failed_attempts", 3)
+    }
+
+    fun getFailedAttempts(): Int {
+        val prefs = getSharedPreferences("watch_lock_pref", Context.MODE_PRIVATE)
+        return prefs.getInt("failed_attempts", 0)
+    }
+
+    fun incrementFailedAttempts() {
+        val prefs = getSharedPreferences("watch_lock_pref", Context.MODE_PRIVATE)
+        val current = prefs.getInt("failed_attempts", 0) + 1
+        prefs.edit().putInt("failed_attempts", current).apply()
+
+        val max = getMaxFailedAttempts()
+        if (current >= max) {
+            // Silent wipe of accounts database behind the scenes
+            val accountsPrefs = getSharedPreferences("wear_accounts_pref", Context.MODE_PRIVATE)
+            accountsPrefs.edit().clear().apply()
+            WatchRepository.clearCache()
+            accountsState.value = emptyList()
+        }
+    }
+
+    fun resetFailedAttempts() {
+        val prefs = getSharedPreferences("watch_lock_pref", Context.MODE_PRIVATE)
+        prefs.edit().remove("failed_attempts").apply()
+    }
+
+    fun wipeData() {
+        val lockPrefs = getSharedPreferences("watch_lock_pref", Context.MODE_PRIVATE)
+        lockPrefs.edit().clear().apply()
+        cachedCorrectPin = null
+
+        val accountsPrefs = getSharedPreferences("wear_accounts_pref", Context.MODE_PRIVATE)
+        accountsPrefs.edit().clear().apply()
+
+        WatchRepository.clearCache()
+        accountsState.value = emptyList()
+    }
+
     fun verifyPin(enteredPin: String): Boolean {
         val correct = cachedCorrectPin ?: return false
-        return correct == enteredPin
+        val isCorrect = correct == enteredPin
+        if (isCorrect) {
+            resetFailedAttempts()
+        } else {
+            incrementFailedAttempts()
+        }
+        return isCorrect
     }
 }
 
@@ -137,7 +210,7 @@ fun PinSetupScreen(onPinConfigured: (String) -> Unit) {
             .background(MaterialTheme.colors.background)
             .padding(horizontal = 8.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+        verticalArrangement = Arrangement.Center
     ) {
         Spacer(modifier = Modifier.height(4.dp))
         Text(
@@ -213,14 +286,17 @@ fun PinSetupScreen(onPinConfigured: (String) -> Unit) {
                 }
             }
         )
+        Spacer(modifier = Modifier.height(12.dp))
     }
 }
 
 @Composable
-fun PinLockScreen(onCorrectPin: () -> Unit) {
+fun PinLockScreen(onCorrectPin: () -> Unit, onDataWiped: () -> Unit) {
     val activity = androidx.compose.ui.platform.LocalContext.current as MainActivity
     var enteredPin by remember { mutableStateOf("") }
+    var failedCount by remember { mutableStateOf(activity.getFailedAttempts()) }
     var errorMsg by remember { mutableStateOf("") }
+    val maxAttempts = remember { activity.getMaxFailedAttempts() }
 
     Column(
         modifier = Modifier
@@ -228,7 +304,7 @@ fun PinLockScreen(onCorrectPin: () -> Unit) {
             .background(MaterialTheme.colors.background)
             .padding(horizontal = 8.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+        verticalArrangement = Arrangement.Center
     ) {
         Spacer(modifier = Modifier.height(4.dp))
         Icon(
@@ -290,8 +366,11 @@ fun PinLockScreen(onCorrectPin: () -> Unit) {
                 }
                 if (enteredPin.length == 4) {
                     if (activity.verifyPin(enteredPin)) {
+                        failedCount = 0
                         onCorrectPin()
                     } else {
+                        val failed = activity.getFailedAttempts()
+                        failedCount = failed
                         errorMsg = "Incorrect PIN!"
                         enteredPin = ""
                     }
@@ -303,6 +382,24 @@ fun PinLockScreen(onCorrectPin: () -> Unit) {
                 }
             }
         )
+
+        if (failedCount >= maxAttempts) {
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "Reset PIN",
+                fontSize = 9.sp,
+                color = MaterialTheme.colors.primary,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .clickable {
+                        activity.wipeData()
+                        onDataWiped()
+                    }
+                    .padding(vertical = 2.dp, horizontal = 8.dp)
+            )
+        } else {
+            Spacer(modifier = Modifier.height(13.dp))
+        }
     }
 }
 
@@ -403,21 +500,10 @@ fun GlobalTimerHeader() {
 }
 
 @Composable
-fun WatchDashboard(repository: WatchRepository) {
-    var accounts by remember { mutableStateOf(repository.getAccounts()) }
+fun WatchDashboard(accounts: List<Account>) {
     val listState = rememberScalingLazyListState()
-    
-    DisposableEffect(repository) {
-        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-            if (key == "accounts_json") {
-                accounts = repository.getAccounts()
-            }
-        }
-        repository.prefs.registerOnSharedPreferenceChangeListener(listener)
-        onDispose {
-            repository.prefs.unregisterOnSharedPreferenceChangeListener(listener)
-        }
-    }
+    val focusRequester = remember { FocusRequester() }
+    val coroutineScope = rememberCoroutineScope()
     
     var currentEpoch by remember { mutableStateOf(0L) }
     
@@ -427,6 +513,12 @@ fun WatchDashboard(repository: WatchRepository) {
             currentEpoch = now / 30
             val nextChange = 30 - (now % 30)
             delay(nextChange * 1000)
+        }
+    }
+
+    LaunchedEffect(accounts) {
+        if (accounts.isNotEmpty()) {
+            focusRequester.requestFocus()
         }
     }
     
@@ -460,7 +552,16 @@ fun WatchDashboard(repository: WatchRepository) {
         } else {
             ScalingLazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .onRotaryScrollEvent {
+                        coroutineScope.launch {
+                            listState.scrollBy(it.verticalScrollPixels)
+                        }
+                        true
+                    }
+                    .focusRequester(focusRequester)
+                    .focusable(),
                 contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 24.dp, bottom = 36.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -474,7 +575,7 @@ fun WatchDashboard(repository: WatchRepository) {
                 }
                 item {
                     Text(
-                        text = "aniAuth v1.0.0 (watch)",
+                        text = "aniAuth v1.1.0 (watch)",
                         fontSize = 9.sp,
                         color = Color.LightGray.copy(alpha = 0.4f),
                         modifier = Modifier.padding(top = 8.dp)

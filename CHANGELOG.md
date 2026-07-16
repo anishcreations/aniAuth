@@ -6,11 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-* 📱 **Latest Released (Phone)**: [v1.3.0](https://github.com/anishcreations/aniAuth/releases/tag/v1.3.0)
-* ⌚ **Latest Released (Wear OS)**: [v1.0.0](https://github.com/anishcreations/aniAuth/releases#release-wear-v1.0.0) 
+* 📱 **Latest Released (Phone)**: [v1.3.0](https://github.com/anishcreations/aniAuth/releases/tag/v1.4.0)
+* ⌚ **Latest Released (Wear OS)**: [v1.0.0](https://github.com/anishcreations/aniAuth/releases#release-wear-v1.1.0) 
 > **To check full Watch Changelog: [Click Here](WEAROS.md#changelog)**
 
 ---
+## [1.4.0] (2026-07-17)
+
+### Added
+- **Wear OS Watch Settings Group**: Extracted all watch-related configurations into a dedicated "Wear OS Watch" settings section, shown dynamically only when a watch connection is active.
+- **Watch PIN Trial Limits Setting**: Added a configuration option to set the maximum failed PIN attempts allowed on the watch (3-default, 6, 9, or Unlimited (999)) before data is silently wiped.
+- **Jetpack Compose Back Handlers**: Added native back gesture/button interceptors to Settings, Manual, Scanner, Add Account, and Account Details overlays to return cleanly to the dashboard instead of backgrounding the app.
+- **Background Autolock**: Configured the app to automatically lock and require biometric re-verification when brought back from the background/minimized state, with smart exclusions when navigating to the system file picker.
+
+### Wear OS Update
+- **Watch Companion Versioning**: Upgraded the Wear OS companion module to [`v1.1.0`](WEAROS.md#110-2026-07-17), integrating rotary bezel scroll support, silent duress database wiping, curved-edge layout optimizations, and empty state focus crash fixes.
+
 ## [1.3.0] (2026-07-15)
 *(Last updated: 2026-07-16)*
 

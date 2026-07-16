@@ -44,6 +44,13 @@ fun SettingsScreen(
     var showDisclaimerDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showExportDialog by remember { mutableStateOf(false) }
+    var maxAttempts by remember {
+        mutableStateOf(
+            context.getSharedPreferences("ani_auth_prefs", android.content.Context.MODE_PRIVATE)
+                .getInt("watch_max_failed_attempts", 3)
+        )
+    }
+    var showAttemptsDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -93,12 +100,34 @@ fun SettingsScreen(
                         subtitle = "Securely save your accounts to a file",
                         onClick = { showExportDialog = true }
                     )
-                    if (isWatchConnected) {
+                }
+            }
+
+            // Wear OS Watch Section (Only shown if connected)
+            if (isWatchConnected) {
+                item {
+                    SettingsSection(title = "Wear OS Watch") {
                         SettingsItem(
                             icon = Icons.Default.Watch,
                             title = "Sync to Watch",
                             subtitle = "Securely sync accounts to Wear OS",
                             onClick = onSyncToWatch
+                        )
+                        SettingsItem(
+                            icon = Icons.Default.Dialpad,
+                            title = "Watch Max PIN Attempts",
+                            subtitle = when (maxAttempts) {
+                                999 -> "Unlimited attempts"
+                                else -> "$maxAttempts attempts before wipe"
+                            },
+                            onClick = { showAttemptsDialog = true }
+                        )
+                        Text(
+                            text = "Watch accounts are silently wiped after max failed attempts. Re-sync required.",
+                            color = TextSecondary.copy(alpha = 0.7f),
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp,
+                            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 4.dp)
                         )
                     }
                 }
@@ -181,7 +210,7 @@ fun SettingsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        "aniAuth v1.3.0",
+                        "aniAuth v1.4.0",
                         modifier = Modifier
                             .clickable {
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/anishcreations/aniAuth/blob/main/CHANGELOG.md"))
@@ -393,6 +422,71 @@ fun SettingsScreen(
             dismissButton = {
                 TextButton(onClick = { showExportDialog = false }) {
                     Text("Cancel", color = TextSecondary)
+                }
+            },
+            containerColor = DarkCard
+        )
+    }
+
+    if (showAttemptsDialog) {
+        AlertDialog(
+            onDismissRequest = { showAttemptsDialog = false },
+            title = { Text("Select Max PIN Attempts", color = TextPrimary, fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        "Watch accounts are silently wiped after max failed attempts. Re-sync required.",
+                        color = TextSecondary,
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp
+                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        val options = listOf(
+                            3 to "3 Attempts (Recommended)",
+                            6 to "6 Attempts",
+                            9 to "9 Attempts",
+                            999 to "Unlimited(999)"
+                        )
+                        options.forEach { (value, label) ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        context.getSharedPreferences("ani_auth_prefs", android.content.Context.MODE_PRIVATE)
+                                            .edit()
+                                            .putInt("watch_max_failed_attempts", value)
+                                            .apply()
+                                        maxAttempts = value
+                                        showAttemptsDialog = false
+                                    }
+                                    .padding(vertical = 4.dp, horizontal = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = (maxAttempts == value),
+                                    onClick = {
+                                        context.getSharedPreferences("ani_auth_prefs", android.content.Context.MODE_PRIVATE)
+                                            .edit()
+                                            .putInt("watch_max_failed_attempts", value)
+                                            .apply()
+                                        maxAttempts = value
+                                        showAttemptsDialog = false
+                                    },
+                                    colors = RadioButtonDefaults.colors(
+                                        selectedColor = PurpleAccent,
+                                        unselectedColor = TextSecondary
+                                    )
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(label, color = TextPrimary, fontSize = 16.sp)
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAttemptsDialog = false }) {
+                    Text("Cancel", color = PurpleAccent)
                 }
             },
             containerColor = DarkCard
