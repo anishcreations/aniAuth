@@ -62,6 +62,8 @@
 ### Aesthetic UI/UX
 - **Aesthetic Light & Dark Themes**: Modern, high-contrast themes built with Jetpack Compose Material 3. Features a premium "Obsidian-Violet" dark mode, and a sleek, high-readability light mode.
 - **Dynamic Theme Selector**: Choose between Light Mode, Dark Mode, or System Default dynamically in the settings panel.
+- **Persistent Account Sorting**: Sort accounts dynamically by Date Added, Alphabetical (A-Z), or Alphabetical (Z-A), with your selection automatically saved.
+- **Dynamic Alphabet Scroll Overlay**: Sleek fast-scroll sidebar on the right margin with elastic letter magnification, tactile feedback clicks, and a floating preview bubble that follows your finger. Automatically stays faint and out of focus when idle, lighting up dynamically when you scroll or hover to keep the dashboard clutter-free.
 - **Dedicated Settings Screen**: Access theme configurations, data management (encrypted backups/imports), biometric security toggles, policy details, and guides in one centralized screen.
 - **Dynamic User Manual**: Soothing, accessible guide detailing app controls, shortcuts, backups, and usage.
 - **Integrated Search & Timer**: Unified search bar and countdown timer in a sleek pill header. Displays a soft-toned refresh message that collapses into an active search field with automatic keyboard focus on click.

@@ -12,8 +12,8 @@ android {
         applicationId = "com.aniauth.authenticator"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
-        versionName = "1.4.0"
+        versionCode = 6
+        versionName = "1.5.0"
         resourceConfigurations.addAll(listOf("en"))
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

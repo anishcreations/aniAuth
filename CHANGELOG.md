@@ -10,7 +10,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * ⌚ **Latest Released (Wear OS)**: [v1.0.0](https://github.com/anishcreations/aniAuth/releases#release-wear-v1.1.0) 
 > **To check full Watch Changelog: [Click Here](WEAROS.md#changelog)**
 
----
+## [1.5.0] (2026-07-20)
+
+### Added
+- **Account Sorting**: Persistent, dynamic account sorting options (Default/Date Added, Alphabetical A-Z, Alphabetical Z-A) with a dedicated top bar dropdown menu.
+- **Fast Scroll Alphabet Sidebar**: Interactive vertical alphabet scroll slider overlayed on the right screen edge for quickly jumping to accounts by their first letter.
+- **Scroll-Aware Dynamic Visibility**: Configure the sidebar to remain at an extremely faint idle opacity (`0.05f`) when the screen is stationary, automatically lighting up to full active opacity (`0.4f`) when scrolling or hovering, then fading out after a short delay.
+- **Floating Letter Indicator**: Overlayed glassmorphic floating letter bubble in the center of the dashboard providing real-time visual feedback of the currently active letter during slides.
+- **Z-A Slider Reversal**: Automatic reversing of the alphabet slider layout (Z to A) when "Alphabetical (Z-A)" sorting is enabled, ensuring intuitive top-to-bottom scroll direction.
+- **Robust Distance-Based Fallback Search**: Dynamic search algorithm that scrolls to the mathematically closest alphabetical character when an exact match for the selected letter doesn't exist, working seamlessly across all sorting modes.
+
+### Changed
+- **Symmetric List Layout & Padding**: Transitioned to an overlay layout for the alphabet sidebar, keeping accounts list cards centered and full-width, with a 6dp margin separation.
+- **Reduced Footer Empty Space**: Decreased the dashboard list footer's bottom blank padding from 72dp to 36dp for a tighter scroll finish.
+
 ## [1.4.0] (2026-07-17)
 
 ### Added

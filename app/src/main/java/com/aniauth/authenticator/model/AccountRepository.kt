@@ -44,4 +44,12 @@ class AccountRepository(context: Context) {
         current.removeAll { it.id == accountId }
         saveAccounts(current)
     }
+
+    fun getSortOrder(): String {
+        return prefs.getString("sort_order", "default") ?: "default"
+    }
+
+    fun saveSortOrder(order: String) {
+        prefs.edit().putString("sort_order", order).apply()
+    }
 }

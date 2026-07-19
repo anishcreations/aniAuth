@@ -33,9 +33,13 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
@@ -45,8 +49,15 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import com.aniauth.authenticator.crypto.OtpAuthParser
 import com.aniauth.authenticator.crypto.KeyStoreHelper
 import com.aniauth.authenticator.crypto.TotpGenerator
@@ -54,7 +65,6 @@ import com.aniauth.authenticator.model.Account
 import com.aniauth.authenticator.model.AccountRepository
 import com.aniauth.authenticator.ui.theme.*
 import kotlinx.coroutines.delay
-import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -80,6 +90,32 @@ fun DashboardScreen(
     var isSearchExpanded by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
     
+    val lazyListState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    var sortOrder by remember { mutableStateOf(repository.getSortOrder()) }
+    var activeLetter by remember { mutableStateOf<Char?>(null) }
+    var activeLetterY by remember { mutableFloatStateOf(0f) }
+    
+    val isScrolling = lazyListState.isScrollInProgress
+    var isSidebarVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isScrolling) {
+        if (isScrolling) {
+            isSidebarVisible = true
+        } else {
+            delay(1500L) // Wait 1.5s before starting to fade out
+            isSidebarVisible = false
+        }
+    }
+    
+    val finalSidebarVisible = isSidebarVisible || (activeLetter != null)
+    
+    val sidebarAlpha by animateFloatAsState(
+        targetValue = if (finalSidebarVisible) 0.4f else 0.05f,
+        animationSpec = tween(durationMillis = 300),
+        label = "SidebarAlpha"
+    )
+    
     // Timer states
     var timeRemaining by remember { mutableLongStateOf(30L - (System.currentTimeMillis() / 1000 % 30)) }
     var progress by remember { mutableFloatStateOf(timeRemaining / 30f) }
@@ -94,10 +130,15 @@ fun DashboardScreen(
         }
     }
     
-    val filteredAccounts = remember(accounts, searchQuery) {
-        accounts.filter {
+    val filteredAccounts = remember(accounts, searchQuery, sortOrder) {
+        val filtered = accounts.filter {
             it.label.contains(searchQuery, ignoreCase = true) ||
             (it.username != null && it.username.contains(searchQuery, ignoreCase = true))
+        }
+        when (sortOrder) {
+            "alphabetical" -> filtered.sortedBy { it.label.lowercase() }
+            "alphabetical_desc" -> filtered.sortedByDescending { it.label.lowercase() }
+            else -> filtered
         }
     }
     
@@ -113,6 +154,66 @@ fun DashboardScreen(
                     )
                 },
                 actions = {
+                    var showSortMenu by remember { mutableStateOf(false) }
+                    
+                    Box {
+                        IconButton(
+                            onClick = { showSortMenu = true }
+                        ) {
+                            Icon(
+                                Icons.Default.Sort,
+                                contentDescription = "Sort Accounts",
+                                tint = PurpleAccent,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = showSortMenu,
+                            onDismissRequest = { showSortMenu = false },
+                            modifier = Modifier.background(DarkCard)
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Default (Date Added)", color = if (sortOrder == "default") PurpleAccent else TextPrimary) },
+                                onClick = {
+                                    sortOrder = "default"
+                                    repository.saveSortOrder("default")
+                                    showSortMenu = false
+                                },
+                                leadingIcon = {
+                                    if (sortOrder == "default") {
+                                        Icon(Icons.Default.Check, contentDescription = null, tint = PurpleAccent)
+                                    }
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Alphabetical (A-Z)", color = if (sortOrder == "alphabetical") PurpleAccent else TextPrimary) },
+                                onClick = {
+                                    sortOrder = "alphabetical"
+                                    repository.saveSortOrder("alphabetical")
+                                    showSortMenu = false
+                                },
+                                leadingIcon = {
+                                    if (sortOrder == "alphabetical") {
+                                        Icon(Icons.Default.Check, contentDescription = null, tint = PurpleAccent)
+                                    }
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Alphabetical (Z-A)", color = if (sortOrder == "alphabetical_desc") PurpleAccent else TextPrimary) },
+                                onClick = {
+                                    sortOrder = "alphabetical_desc"
+                                    repository.saveSortOrder("alphabetical_desc")
+                                    showSortMenu = false
+                                },
+                                leadingIcon = {
+                                    if (sortOrder == "alphabetical_desc") {
+                                        Icon(Icons.Default.Check, contentDescription = null, tint = PurpleAccent)
+                                    }
+                                }
+                            )
+                        }
+                    }
+
                     IconButton(
                         onClick = { showSettings = true },
                         modifier = Modifier.padding(end = 4.dp)
@@ -155,14 +256,13 @@ fun DashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp)
         ) {
             if (accounts.isNotEmpty()) {
                 // Cohesive Search + Timer Row
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 12.dp)
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
                         .height(64.dp)
                         .clip(RoundedCornerShape(32.dp))
                         .background(DarkCard)
@@ -263,7 +363,7 @@ fun DashboardScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 12.dp)
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
                         .height(64.dp)
                         .clip(RoundedCornerShape(32.dp))
                         .background(DarkCard)
@@ -293,6 +393,7 @@ fun DashboardScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
                         .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
@@ -311,7 +412,7 @@ fun DashboardScreen(
                         Spacer(modifier = Modifier.height(24.dp))
                         val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
                         Text(
-                            text = "aniAuth v1.4.0",
+                            text = "aniAuth v1.5.0",
                             color = TextSecondary.copy(alpha = 0.3f),
                             fontSize = 11.sp,
                             fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
@@ -329,6 +430,7 @@ fun DashboardScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
                         .weight(1f),
                     contentAlignment = Alignment.Center
                 ) {
@@ -340,70 +442,143 @@ fun DashboardScreen(
                     )
                 }
             } else {
-                LazyColumn(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    contentPadding = PaddingValues(top = 4.dp, bottom = 16.dp)
+                        .weight(1f)
                 ) {
-                    items(filteredAccounts, key = { it.id }) { account ->
-                        AccountCard(
-                            account = account,
-                            timeRemaining = timeRemaining,
-                            onLongClick = {
-                                selectedAccountForDetails = account
-                            }
-                        )
-                    }
+                    LazyColumn(
+                        state = lazyListState,
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        contentPadding = PaddingValues(start = 16.dp, end = 22.dp, top = 4.dp, bottom = 16.dp)
+                    ) {
+                        items(filteredAccounts, key = { it.id }) { account ->
+                            AccountCard(
+                                account = account,
+                                timeRemaining = timeRemaining,
+                                onLongClick = {
+                                    selectedAccountForDetails = account
+                                }
+                            )
+                        }
 
-                    // Noticeable Footer at the end of scroll
-                    item {
-                        Surface(
-                            onClick = { showManual = true },
-                            color = SoftFooterColor.copy(alpha = 0.04f),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 24.dp, bottom = 12.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(16.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
+                        // Noticeable Footer at the end of scroll
+                        item {
+                            Surface(
+                                onClick = { showManual = true },
+                                color = SoftFooterColor.copy(alpha = 0.04f),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 24.dp, bottom = 12.dp)
                             ) {
-                                Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, tint = SoftFooterColor.copy(alpha = 0.8f), modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
+                                Row(
+                                    modifier = Modifier.padding(16.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, tint = SoftFooterColor.copy(alpha = 0.8f), modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        "View User Manual & Tips",
+                                        color = SoftFooterColor.copy(alpha = 0.8f),
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+                        
+                        item {
+                            val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp, bottom = 36.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
                                 Text(
-                                    "View User Manual & Tips",
-                                    color = SoftFooterColor.copy(alpha = 0.8f),
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium
+                                    text = "aniAuth v1.5.0",
+                                    color = SoftFooterColor.copy(alpha = 0.3f),
+                                    fontSize = 11.sp,
+                                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                    modifier = Modifier.clickable {
+                                        try {
+                                            uriHandler.openUri("https://github.com/anishcreations/aniAuth/blob/main/CHANGELOG.md")
+                                        } catch (e: Exception) {
+                                            e.printStackTrace()
+                                        }
+                                    }
                                 )
                             }
                         }
                     }
-                    
-                    item {
-                        val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+
+                    // Alphabet Sidebar overlayed on the right edge
+                    AlphabetSidebar(
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .offset(y = (-80).dp)
+                            .padding(end = 2.dp)
+                            .height(440.dp)
+                            .graphicsLayer { this.alpha = sidebarAlpha },
+                        sortOrder = sortOrder,
+                        onLetterSelected = { letter ->
+                            val targetIndex = filteredAccounts.indexOfFirst {
+                                it.label.firstOrNull()?.uppercaseChar() == letter
+                            }
+                            if (targetIndex != -1) {
+                                coroutineScope.launch {
+                                    lazyListState.scrollToItem(targetIndex)
+                                }
+                            } else {
+                                // Find the account whose first letter has the minimum alphabetical distance
+                                var bestIndex = -1
+                                var minDistance = Int.MAX_VALUE
+                                filteredAccounts.forEachIndexed { index, account ->
+                                    val firstChar = account.label.firstOrNull()?.uppercaseChar()
+                                    if (firstChar != null && firstChar in 'A'..'Z') {
+                                        val dist = java.lang.Math.abs(firstChar - letter)
+                                        if (dist < minDistance) {
+                                            minDistance = dist
+                                            bestIndex = index
+                                        }
+                                    }
+                                }
+                                if (bestIndex != -1) {
+                                    coroutineScope.launch {
+                                        lazyListState.scrollToItem(bestIndex)
+                                    }
+                                }
+                            }
+                        },
+                        onDragStateChanged = { letter, y ->
+                            activeLetter = letter
+                            activeLetterY = y
+                        }
+                    )
+
+                    // Floating Letter Bubble Indicator overlay
+                    if (activeLetter != null) {
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 8.dp, bottom = 72.dp),
+                                .align(Alignment.CenterEnd)
+                                .offset(
+                                    x = (-36).dp,
+                                    y = with(LocalDensity.current) { activeLetterY.toDp() } - 300.dp
+                                )
+                                .size(56.dp)
+                                .clip(CircleShape)
+                                .background(PurpleAccent.copy(alpha = 0.95f))
+                                .border(1.5.dp, Color.White.copy(alpha = 0.3f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "aniAuth v1.4.0",
-                                color = SoftFooterColor.copy(alpha = 0.3f),
-                                fontSize = 11.sp,
-                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                                modifier = Modifier.clickable {
-                                    try {
-                                        uriHandler.openUri("https://github.com/anishcreations/aniAuth/blob/main/CHANGELOG.md")
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                    }
-                                }
+                                text = activeLetter.toString(),
+                                color = Color.White,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
@@ -625,6 +800,136 @@ fun AccountCard(
                 fontSize = 28.sp,
                 fontFamily = FontFamily.Monospace,
                 letterSpacing = 1.sp
+            )
+        }
+    }
+}
+
+@Composable
+fun AlphabetSidebar(
+    modifier: Modifier = Modifier,
+    sortOrder: String = "default",
+    onLetterSelected: (Char) -> Unit,
+    onDragStateChanged: (Char?, Float) -> Unit
+) {
+    val alphabet = remember(sortOrder) {
+        if (sortOrder == "alphabetical_desc") ('Z' downTo 'A').toList() else ('A'..'Z').toList()
+    }
+    var height by remember { mutableIntStateOf(0) }
+    var touchY by remember { mutableStateOf<Float?>(null) }
+    
+    val haptic = LocalHapticFeedback.current
+    var lastHapticLetter by remember { mutableStateOf<Char?>(null) }
+
+    Column(
+        modifier = modifier
+            .width(16.dp)
+            .background(Color.White.copy(alpha = 0.03f), shape = RoundedCornerShape(8.dp))
+            .border(0.5.dp, Color.White.copy(alpha = 0.08f), shape = RoundedCornerShape(8.dp))
+            .padding(vertical = 8.dp)
+            .onGloballyPositioned { coordinates ->
+                height = coordinates.size.height
+            }
+            .pointerInput(height) {
+                if (height <= 0) return@pointerInput
+
+                fun handleTouch(y: Float) {
+                    touchY = y
+                    val index = (y / height * alphabet.size).toInt()
+                        .coerceIn(0, alphabet.size - 1)
+                    val letter = alphabet[index]
+                    onLetterSelected(letter)
+                    onDragStateChanged(letter, y)
+                    
+                    if (letter != lastHapticLetter) {
+                        lastHapticLetter = letter
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
+                }
+
+                detectTapGestures(
+                    onPress = { offset ->
+                        handleTouch(offset.y)
+                        try {
+                            awaitRelease()
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                        touchY = null
+                        lastHapticLetter = null
+                        onDragStateChanged(null, 0f)
+                    }
+                )
+            }
+            .pointerInput(height) {
+                if (height <= 0) return@pointerInput
+
+                fun handleTouch(y: Float) {
+                    touchY = y
+                    val index = (y / height * alphabet.size).toInt()
+                        .coerceIn(0, alphabet.size - 1)
+                    val letter = alphabet[index]
+                    onLetterSelected(letter)
+                    onDragStateChanged(letter, y)
+                    
+                    if (letter != lastHapticLetter) {
+                        lastHapticLetter = letter
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
+                }
+
+                detectDragGestures(
+                    onDragStart = { offset ->
+                        handleTouch(offset.y)
+                    },
+                    onDrag = { change, _ ->
+                        handleTouch(change.position.y)
+                    },
+                    onDragEnd = {
+                        touchY = null
+                        lastHapticLetter = null
+                        onDragStateChanged(null, 0f)
+                    },
+                    onDragCancel = {
+                        touchY = null
+                        lastHapticLetter = null
+                        onDragStateChanged(null, 0f)
+                    }
+                )
+            },
+        verticalArrangement = Arrangement.SpaceEvenly,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        alphabet.forEachIndexed { index, char ->
+            val scale = {
+                val currentTouchY = touchY
+                if (currentTouchY != null && height > 0) {
+                    val letterCenterY = (index + 0.5f) / alphabet.size * height
+                    val dist = kotlin.math.abs(currentTouchY - letterCenterY)
+                    val maxDist = height / 5.0f
+                    if (dist < maxDist) {
+                        1.0f + 0.7f * (1.0f - dist / maxDist)
+                    } else {
+                        1.0f
+                    }
+                } else {
+                    1.0f
+                }
+            }
+            Text(
+                text = char.toString(),
+                color = TextSecondary.copy(alpha = 0.7f),
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .weight(1f)
+                    .graphicsLayer {
+                        val s = scale()
+                        scaleX = s
+                        scaleY = s
+                        translationX = -((s - 1.0f) * 8.dp.toPx())
+                    }
             )
         }
     }
