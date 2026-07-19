@@ -519,7 +519,7 @@ fun DashboardScreen(
                     AlphabetSidebar(
                         modifier = Modifier
                             .align(Alignment.CenterEnd)
-                            .offset(y = (-80).dp)
+                            .offset(y = (-70).dp)
                             .padding(end = 2.dp)
                             .height(440.dp)
                             .graphicsLayer { this.alpha = sidebarAlpha },
@@ -566,7 +566,7 @@ fun DashboardScreen(
                                 .align(Alignment.CenterEnd)
                                 .offset(
                                     x = (-36).dp,
-                                    y = with(LocalDensity.current) { activeLetterY.toDp() } - 300.dp
+                                    y = with(LocalDensity.current) { activeLetterY.toDp() } - 290.dp
                                 )
                                 .size(56.dp)
                                 .clip(CircleShape)

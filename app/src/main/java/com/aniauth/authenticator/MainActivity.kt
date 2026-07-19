@@ -198,7 +198,13 @@ class MainActivity : AppCompatActivity() {
             subtitle = "Verify identity to synchronize accounts"
         ) {
             val accounts = repository.getAccounts()
-            val accountsJson = com.aniauth.authenticator.model.AccountSerializer.toJson(accounts, decryptSecrets = true)
+            val sortOrder = repository.getSortOrder()
+            val sortedAccounts = when (sortOrder) {
+                "alphabetical" -> accounts.sortedBy { it.label.lowercase() }
+                "alphabetical_desc" -> accounts.sortedByDescending { it.label.lowercase() }
+                else -> accounts
+            }
+            val accountsJson = com.aniauth.authenticator.model.AccountSerializer.toJson(sortedAccounts, decryptSecrets = true)
             
             // Retrieve max attempts setting
             val maxAttempts = getSharedPreferences("ani_auth_prefs", MODE_PRIVATE)

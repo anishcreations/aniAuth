@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Symmetric List Layout & Padding**: Transitioned to an overlay layout for the alphabet sidebar, keeping accounts list cards centered and full-width, with a 6dp margin separation.
 - **Reduced Footer Empty Space**: Decreased the dashboard list footer's bottom blank padding from 72dp to 36dp for a tighter scroll finish.
 
+### Wear OS Update
+- **Synchronized Sorting Alignment**: Added sorting layout sync from phone v1.5.0 to Wear OS companion v1.1.0, naturally inheriting the array order during synchronization (documented under Wear OS [`v1.1.0`](WEAROS.md#110-2026-07-17)).
+
 ## [1.4.0] (2026-07-17)
 
 ### Added

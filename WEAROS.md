@@ -230,6 +230,9 @@ wearos/
 ## Changelog
 
 ### [1.1.0] (2026-07-17)
+*(Last updated: 2026-07-20 - docs & sorting sync)*
+
+- **Synchronized sorting order alignment**: Automatically inherits the dynamic account sorting order (Date Added, Alphabetical A-Z, or Alphabetical Z-A) chosen on the phone app during synchronization (Requires Phone companion app v1.5.0 or higher).
 
 - **Rotary Bezel Scrolling**: Added support for physical rotary dial/RSB and bezel rotation on Wear OS devices (like Galaxy Watch) using Jetpack Compose FocusRequester.
 - **Duress PIN & Silent Wipe**: Implemented duress protection that silently clears all synced accounts behind the scenes after a customizable number of incorrect PIN attempts, displaying a "Reset PIN" visual option at the bottom to recreate the passcode.

@@ -51,6 +51,7 @@ fun SettingsScreen(
         )
     }
     var showAttemptsDialog by remember { mutableStateOf(false) }
+    var showWatchGuideDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -121,6 +122,12 @@ fun SettingsScreen(
                                 else -> "$maxAttempts attempts before wipe"
                             },
                             onClick = { showAttemptsDialog = true }
+                        )
+                        SettingsItem(
+                            icon = Icons.Default.Info,
+                            title = "Watch Sync Guide",
+                            subtitle = "Learn about Wear OS offline sync & security",
+                            onClick = { showWatchGuideDialog = true }
                         )
                         Text(
                             text = "Watch accounts are silently wiped after max failed attempts. Re-sync required.",
@@ -487,6 +494,49 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(onClick = { showAttemptsDialog = false }) {
                     Text("Cancel", color = PurpleAccent)
+                }
+            },
+            containerColor = DarkCard
+        )
+    }
+
+    if (showWatchGuideDialog) {
+        AlertDialog(
+            onDismissRequest = { showWatchGuideDialog = false },
+            title = {
+                Text("Wear OS Sync Guide", color = PurpleAccent, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        "aniAuth supports fully offline 2FA codes on your Wear OS watch. Key sync & security guidelines:",
+                        color = TextPrimary,
+                        fontSize = 14.sp
+                    )
+                    
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row {
+                            Text("• ", color = PurpleAccent, fontWeight = FontWeight.Bold)
+                            Text("Sorting Order: Accounts sync in the exact sorting order active on your phone dashboard at the time of sync.", color = TextSecondary, fontSize = 13.sp)
+                        }
+                        Row {
+                            Text("• ", color = PurpleAccent, fontWeight = FontWeight.Bold)
+                            Text("Limits Change: Changing 'Watch Max PIN Attempts' requires running 'Sync to Watch' to apply the new policy to the watch.", color = TextSecondary, fontSize = 13.sp)
+                        }
+                        Row {
+                            Text("• ", color = PurpleAccent, fontWeight = FontWeight.Bold)
+                            Text("Silent Wipe Duress: Crossing failed attempts silently clears all watch secrets. Perform a new sync to restore them.", color = TextSecondary, fontSize = 13.sp)
+                        }
+                        Row {
+                            Text("• ", color = PurpleAccent, fontWeight = FontWeight.Bold)
+                            Text("Hardware KeyStore: Synced secrets are re-encrypted using the watch's own hardware-backed KeyStore.", color = TextSecondary, fontSize = 13.sp)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showWatchGuideDialog = false }) {
+                    Text("Got It", color = PurpleAccent, fontWeight = FontWeight.Bold)
                 }
             },
             containerColor = DarkCard
