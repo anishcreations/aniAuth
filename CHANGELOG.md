@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 * 📱 **Latest Released (Phone)**: [v1.3.0](https://github.com/anishcreations/aniAuth/releases/tag/v1.4.0)
-* ⌚ **Latest Released (Wear OS)**: [v1.0.0](https://github.com/anishcreations/aniAuth/releases#release-wear-v1.1.0) 
+* ⌚ **Latest Released (Wear OS)**: [v1.2.0](https://github.com/anishcreations/aniAuth/releases#release-wear-v1.2.0) 
 > **To check full Watch Changelog: [Click Here](WEAROS.md#changelog)**
 
 ## [1.5.0] (2026-07-20)
@@ -25,7 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Reduced Footer Empty Space**: Decreased the dashboard list footer's bottom blank padding from 72dp to 36dp for a tighter scroll finish.
 
 ### Wear OS Update
-- **Synchronized Sorting Alignment**: Added sorting layout sync from phone v1.5.0 to Wear OS companion v1.1.0, naturally inheriting the array order during synchronization (documented under Wear OS [`v1.1.0`](WEAROS.md#110-2026-07-17)).
+- **Rotary Bezel-Exclusive Haptics**: Tactile `CLOCK_TICK` vibration feedback on physical bezel rotation, leaving hand touch scrolling completely silent (documented under Wear OS [`v1.2.0`](WEAROS.md#120-2026-07-25)).
+- **Fixed Footer Bottom Empty Space**: Disabled auto-centering spacer padding (`autoCentering = null`), eliminating excessive blank space at the bottom of the scroll view.
+- **Synchronized Sorting Alignment**: Added sorting layout sync from phone v1.5.0 to Wear OS companion v1.2.0, naturally inheriting the array order during synchronization.
 
 ## [1.4.0] (2026-07-17)
 

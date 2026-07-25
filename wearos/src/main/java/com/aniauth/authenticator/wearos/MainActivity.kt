@@ -39,7 +39,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.focusable
 import androidx.compose.ui.input.rotary.onRotaryScrollEvent
-import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.ui.platform.LocalView
+import android.view.HapticFeedbackConstants
+import androidx.wear.compose.foundation.lazy.ScalingLazyColumnDefaults
 
 class MainActivity : ComponentActivity() {
 
@@ -504,9 +506,11 @@ fun WatchDashboard(accounts: List<Account>) {
     val listState = rememberScalingLazyListState()
     val focusRequester = remember { FocusRequester() }
     val coroutineScope = rememberCoroutineScope()
+    val view = LocalView.current
     
     var currentEpoch by remember { mutableStateOf(0L) }
-    
+    var rotaryAccumulator by remember { mutableFloatStateOf(0f) }
+
     LaunchedEffect(Unit) {
         while (true) {
             val now = System.currentTimeMillis() / 1000
@@ -554,31 +558,42 @@ fun WatchDashboard(accounts: List<Account>) {
                 state = listState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .onRotaryScrollEvent {
-                        coroutineScope.launch {
-                            listState.scrollBy(it.verticalScrollPixels)
+                    .onRotaryScrollEvent { event ->
+                        rotaryAccumulator += event.verticalScrollPixels
+                        if (kotlin.math.abs(rotaryAccumulator) >= 36f) {
+                            rotaryAccumulator = 0f
+                            if (!view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)) {
+                                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                            }
                         }
+                        listState.dispatchRawDelta(event.verticalScrollPixels)
                         true
                     }
                     .focusRequester(focusRequester)
                     .focusable(),
-                contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 24.dp, bottom = 36.dp),
+                scalingParams = ScalingLazyColumnDefaults.scalingParams(
+                    edgeScale = 0.60f,
+                    edgeAlpha = 0.50f,
+                    minTransitionArea = 0.22f,
+                    maxTransitionArea = 0.45f
+                ),
+                autoCentering = null,
+                contentPadding = PaddingValues(start = 10.dp, end = 10.dp, top = 16.dp, bottom = 28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-                autoCentering = null
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 item {
                     GlobalTimerHeader()
                 }
-                items(accounts) { account ->
+                items(accounts, key = { it.id }) { account ->
                     WatchAccountCard(account, currentEpoch)
                 }
                 item {
                     Text(
-                        text = "aniAuth v1.1.0 (watch)",
+                        text = "aniAuth v1.2.0 (watch)",
                         fontSize = 9.sp,
                         color = Color.LightGray.copy(alpha = 0.4f),
-                        modifier = Modifier.padding(top = 8.dp)
+                        modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
                     )
                 }
             }
@@ -612,10 +627,12 @@ fun WatchAccountCard(account: Account, currentEpoch: Long) {
         onClick = { /* Disable click actions */ },
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp),
+            .height(56.dp)
+            .border(1.dp, Color(0xFF2A2238), shape = RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
         backgroundPainter = CardDefaults.cardBackgroundPainter(
-            startBackgroundColor = Color(0xFF120E1A),
-            endBackgroundColor = Color(0xFF1A1527)
+            startBackgroundColor = Color(0xFF130F1C),
+            endBackgroundColor = Color(0xFF1C172B)
         )
     ) {
         Row(

@@ -1,6 +1,6 @@
 # aniAuth Wear OS Companion 
 
-Welcome to the dedicated documentation page for the **aniAuth Wear OS Companion** app (`v1.1.0`). 
+Welcome to the dedicated documentation page for the **aniAuth Wear OS Companion** app (`v1.2.0`). 
 
 This companion module allows you to securely view your 2FA TOTP codes directly on your wrist (designed primarily for Galaxy Watch and Wear OS devices).
 
@@ -23,7 +23,8 @@ This companion module allows you to securely view your 2FA TOTP codes directly o
 - **Fully Offline After Sync:** Once synced, your watch generates TOTP codes independently using its own local clock and local copy of the RFC 6238 algorithm — no phone or internet connection needed.
 - **Zero Scroll Lag:** Employs a self-contained `GlobalTimerHeader` composable (with its own isolated `LaunchedEffect` timer at 500ms intervals) so the account list only recomposes once every 30 seconds when TOTP codes actually change.
 - **Biometric-Protected Syncing:** Transfer accounts wirelessly from your phone with a single tap, protected by your phone's biometric/device credential locks.
-- **Rotary Bezel Support:** Navigate through your accounts smoothly using your watch's physical rotating bezel or digital crown.
+- **Rotary Bezel Haptic Feedback & Step Snapping:** Navigate through your accounts using your watch's physical rotating bezel or digital crown with crisp tactile haptic vibration feedback for every notch turned, scrolling precisely 1 account card per bezel detent.
+- **Dynamic Circular Scaling List:** Automatically centers active account items in the circular viewport at 100% full width, while dynamically scaling and fading items above and below into a sleek curved round arc.
 - **Instant Lock & Duress Wipe:** Secures your keys with a 4-digit PIN setup featuring iOS-style circular dot indicators. Locks instantly via `onPause()` on screen dim, backgrounding, or side-button presses. Includes a duress limit that silently wipes accounts after a customizable number of incorrect attempts (configured via the phone app).
 
 ---
@@ -228,6 +229,11 @@ wearos/
 ```
 
 ## Changelog
+
+### [1.2.0] (2026-07-25)
+- **Fluid Hardware Rotary Bezel Scrolling**: Direct hardware-accelerated rotary bezel scroll physics for 60fps/90fps buttery-smooth motion with zero fling delay.
+- **Rotary Bezel-Exclusive Soft Haptic Feedback**: Tactile `CLOCK_TICK` haptic feedback ticks trigger exclusively during physical rotary bezel rotation (touch/hand scrolling remains completely silent).
+- **Dynamic Circular Scaling List**: Configured `ScalingLazyColumn` parameters (`edgeScale = 0.60f`, `edgeAlpha = 0.50f`, `minTransitionArea = 0.22f`, `maxTransitionArea = 0.45f`) so 2 main cards remain full-sized at 1.0 scale in the center while top and bottom edge items downscale to 60% size for clear visibility on circular watch faces.
 
 ### [1.1.0] (2026-07-17)
 *(Last updated: 2026-07-20 - docs & sorting sync)*
