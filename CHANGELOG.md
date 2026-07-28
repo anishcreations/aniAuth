@@ -6,9 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-* 📱 **Latest Released (Phone)**: [v1.3.0](https://github.com/anishcreations/aniAuth/releases/tag/v1.4.0)
+* 📱 **Latest Released (Phone)**: [v1.6.0](https://github.com/anishcreations/aniAuth/releases/tag/v1.6.0)
 * ⌚ **Latest Released (Wear OS)**: [v1.2.0](https://github.com/anishcreations/aniAuth/releases#release-wear-v1.2.0) 
 > **To check full Watch Changelog: [Click Here](WEAROS.md#changelog)**
+
+## [1.6.0] (2026-07-28)
+
+### Refined
+- **Sleek Account Cards**: Updated card corner radius to a modern `14dp` shape with dynamic Light/Dark theme borders and service initial badges.
+- **Improved Sidebar Visibility**: Increased non-scrolling idle sidebar opacity from 5% (`0.05f`) to 9% (`0.09f`) for improved accessibility while maintaining an unobstructed view.
+
+### Added
+- **Comprehensive In-App User Manual & Wear OS Sync Guide**: Expanded the in-app user guide into a scrollable, structured manual detailing 2FA code copying, QR scanning, AES KeyStore encryption, password-protected backups, and Wear OS Bluetooth sync & offline security mechanics.
 
 ## [1.5.0] (2026-07-20)
 

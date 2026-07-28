@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/anishcreations/aniAuth/releases/tag/v1.3.0"><img src="https://img.shields.io/badge/Phone_Release-v1.3.0-purple?style=for-the-badge&logo=android&logoColor=white" alt="Phone Release" /></a>
+  <a href="https://github.com/anishcreations/aniAuth/releases/tag/v1.6.0"><img src="https://img.shields.io/badge/Phone_Release-v1.6.0-purple?style=for-the-badge&logo=android&logoColor=white" alt="Phone Release" /></a>
   <a href="https://github.com/anishcreations/aniAuth/releases#release-wear-v1.0.0"><img src="https://img.shields.io/badge/Wear_OS_Release-v1.0.0-blueviolet?style=for-the-badge&logo=android&logoColor=white" alt="Wear OS Release" /></a>
 </p>
 
@@ -65,7 +65,7 @@
 - **Persistent Account Sorting**: Sort accounts dynamically by Date Added, Alphabetical (A-Z), or Alphabetical (Z-A), with your selection automatically saved.
 - **Dynamic Alphabet Scroll Overlay**: Sleek fast-scroll sidebar on the right margin with elastic letter magnification, tactile feedback clicks, and a floating preview bubble that follows your finger. Automatically stays faint and out of focus when idle, lighting up dynamically when you scroll or hover to keep the dashboard clutter-free.
 - **Dedicated Settings Screen**: Access theme configurations, data management (encrypted backups/imports), biometric security toggles, policy details, and guides in one centralized screen.
-- **Dynamic User Manual**: Soothing, accessible guide detailing app controls, shortcuts, backups, and usage.
+- **Comprehensive User Manual & Wear OS Sync Guide**: In-app guide detailing quick controls, single global timer sync, TEE KeyStore encryption, password-protected backups, and Wear OS Bluetooth sync & offline security mechanics.
 - **Integrated Search & Timer**: Unified search bar and countdown timer in a sleek pill header. Displays a soft-toned refresh message that collapses into an active search field with automatic keyboard focus on click.
 - **One-Tap Copy**: Tap any card to copy the code directly to your clipboard.
 - **Flexible Backup Exports**: Export backups in secure Encrypted format (AES-256 encrypted with aniAuth's internal key) or Decrypted format (plaintext JSON) with built-in warnings.

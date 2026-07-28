@@ -17,12 +17,16 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -50,6 +54,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
@@ -111,7 +120,7 @@ fun DashboardScreen(
     val finalSidebarVisible = isSidebarVisible || (activeLetter != null)
     
     val sidebarAlpha by animateFloatAsState(
-        targetValue = if (finalSidebarVisible) 0.4f else 0.05f,
+        targetValue = if (finalSidebarVisible) 0.4f else 0.09f,
         animationSpec = tween(durationMillis = 300),
         label = "SidebarAlpha"
     )
@@ -161,7 +170,7 @@ fun DashboardScreen(
                             onClick = { showSortMenu = true }
                         ) {
                             Icon(
-                                Icons.Default.Sort,
+                                Icons.AutoMirrored.Filled.Sort,
                                 contentDescription = "Sort Accounts",
                                 tint = PurpleAccent,
                                 modifier = Modifier.size(28.dp)
@@ -412,7 +421,7 @@ fun DashboardScreen(
                         Spacer(modifier = Modifier.height(24.dp))
                         val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
                         Text(
-                            text = "aniAuth v1.5.0",
+                            text = "aniAuth v1.6.0",
                             color = TextSecondary.copy(alpha = 0.3f),
                             fontSize = 11.sp,
                             fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
@@ -499,7 +508,7 @@ fun DashboardScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "aniAuth v1.5.0",
+                                    text = "aniAuth v1.6.0",
                                     color = SoftFooterColor.copy(alpha = 0.3f),
                                     fontSize = 11.sp,
                                     fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
@@ -673,20 +682,48 @@ fun DashboardScreen(
 fun UserManualDialog(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("User Manual & Tips", color = TextPrimary, fontWeight = FontWeight.Bold) },
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, tint = PurpleAccent, modifier = Modifier.size(24.dp))
+                Spacer(modifier = Modifier.width(10.dp))
+                Text("User Manual & Sync Guide", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            }
+        },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                GuideItem(Icons.Default.TouchApp, "Tap any card to copy its 2FA code.")
-                GuideItem(Icons.Default.AdsClick, "Long-press a card to edit details or view the secret key.")
-                GuideItem(Icons.Default.QrCodeScanner, "Tap the scanner button to scan 2FA QR codes via camera.")
-                GuideItem(Icons.Default.Add, "Tap the + button to manually add accounts.")
-                GuideItem(Icons.Default.Backup, "Export password-protected backups or import from settings.")
-                GuideItem(Icons.Default.Security, "All data is encrypted and stored locally on your device.")
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Text("📱 Dashboard & Quick Actions", color = PurpleAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                GuideItem(Icons.Default.TouchApp, "Tap to Copy: Single-tap any account card to copy its 6-digit TOTP code instantly to your clipboard.")
+                GuideItem(Icons.Default.AdsClick, "Account Details: Tap and hold (long-press) any card to edit details, view the secret key, or delete the account.")
+                GuideItem(Icons.Default.QrCodeScanner, "QR Camera Scanner: Tap the scanner button to scan 2FA QR codes powered by ML Kit Vision API.")
+                GuideItem(Icons.Default.Add, "Manual Addition: Tap the + button to manually type account labels and secret keys.")
+                GuideItem(Icons.AutoMirrored.Filled.Sort, "Account Sorting: Tap the top bar sort icon to toggle Default (Date Added), A-Z, or Z-A sorting.")
+                GuideItem(Icons.Default.SwapVert, "Alphabet Sidebar: Drag or tap the right-edge letter bar to jump directly to accounts by initial.")
+
+                HorizontalDivider(color = BorderColor.copy(alpha = 0.5f), thickness = 1.dp)
+
+                Text("⏱️ Global Timer & Security", color = PurpleAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                GuideItem(Icons.Default.Timer, "Single Global Timer: The circular ring in the search bar counts down the 30-second TOTP step for all accounts in unison.")
+                GuideItem(Icons.Default.Security, "Hardware KeyStore Encryption: Secrets are encrypted locally using AES-GCM backed by Android KeyStore TEE/SE.")
+                GuideItem(Icons.Default.Backup, "Encrypted Backups: Export and import password-protected JSON backup files safely from Settings.")
+
+                HorizontalDivider(color = BorderColor.copy(alpha = 0.5f), thickness = 1.dp)
+
+                Text("⌚ Wear OS Watch Companion Sync Guide", color = PurpleAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                GuideItem(Icons.Default.Watch, "Bluetooth Sync: Open Settings and tap 'Sync to Watch' (requires biometric auth) to push accounts to your paired Wear OS smartwatch via Google Play Services DataLayer.")
+                GuideItem(Icons.Default.WifiOff, "100% Offline Watch TOTP: Once synced, the Wear OS watch app generates TOTP codes fully offline without requiring a connected phone or internet.")
+                GuideItem(Icons.Default.Lock, "Watch Instant Auto-Lock: The watch app locks instantly when minimized or when the watch screen dims.")
+                GuideItem(Icons.Default.Shield, "Silent Duress Protection: If max failed PIN attempts (configurable in Settings: 3, 6, 9, or unlimited) are reached on the watch, watch accounts are silently wiped to prevent theft.")
             }
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Got it", color = PurpleAccent)
+                Text("Got it", color = PurpleAccent, fontWeight = FontWeight.Bold)
             }
         },
         containerColor = DarkCard
@@ -698,12 +735,12 @@ fun GuideItem(icon: ImageVector, text: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(vertical = 2.dp),
+        verticalAlignment = Alignment.Top
     ) {
-        Icon(icon, contentDescription = null, tint = PurpleAccent, modifier = Modifier.size(20.dp))
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(text, color = TextPrimary, fontSize = 13.sp, lineHeight = 18.sp)
+        Icon(icon, contentDescription = null, tint = PurpleAccent, modifier = Modifier.size(18.dp).padding(top = 2.dp))
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(text, color = TextPrimary, fontSize = 12.sp, lineHeight = 17.sp)
     }
 }
 
@@ -715,13 +752,11 @@ fun AccountCard(
     onLongClick: () -> Unit
 ) {
     val context = LocalContext.current
-    
-    // Decrypt the secret to calculate the TOTP code
+
     val decryptedSecret = remember(account.encryptedSecret) {
         KeyStoreHelper.decrypt(account.encryptedSecret) ?: ""
     }
     
-    // Calculate the TOTP code (recalculate only when the 30s epoch step actually changes)
     val timeStep = remember(timeRemaining) {
         (System.currentTimeMillis() / 1000) / 30
     }
@@ -733,7 +768,6 @@ fun AccountCard(
         }
     }
     
-    // Format code as "123 456"
     val formattedCode = remember(code) {
         if (code.length >= 6) {
             "${code.substring(0, 3)} ${code.substring(3, 6)}"
@@ -741,18 +775,23 @@ fun AccountCard(
             code
         }
     }
-    
+
+    val initialChar = remember(account.label) {
+        account.label.trim().take(1).uppercase()
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp) // Slimmer fixed height
-            .clip(RoundedCornerShape(12.dp)) // Slightly tighter corners for slim look
+            .height(92.dp)
+            .border(1.dp, BorderColor, shape = RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(14.dp))
             .combinedClickable(
                 onClick = {
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     val clip = ClipData.newPlainText("2FA Code", code)
                     clipboard.setPrimaryClip(clip)
-                    Toast.makeText(context, "Code copied to clipboard", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "${account.label} code copied!", Toast.LENGTH_SHORT).show()
                 },
                 onLongClick = onLongClick
             ),
@@ -763,41 +802,61 @@ fun AccountCard(
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize() // Use fillMaxSize to match card height
-                .padding(horizontal = 16.dp, vertical = 8.dp), // Reduced vertical padding
+                .fillMaxSize()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = account.label,
-                    color = PurpleAccent,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp, 
-                    letterSpacing = 0.05.sp,
-                    maxLines = 1,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                )
-                
-                if (!account.username.isNullOrEmpty()) {
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(PurpleAccent.copy(alpha = 0.2f))
+                        .border(1.dp, PurpleAccent.copy(alpha = 0.5f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
-                        text = account.username,
-                        color = TextPrimary.copy(alpha = 0.6f),
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(top = 1.dp),
+                        text = initialChar,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PurpleAccent
+                    )
+                }
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = account.label,
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp,
                         maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
+                    if (!account.username.isNullOrEmpty()) {
+                        Text(
+                            text = account.username,
+                            color = TextSecondary.copy(alpha = 0.6f),
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 12.sp,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
-            
-            // Code in the middle/right
+
+            Spacer(modifier = Modifier.width(8.dp))
+
             Text(
                 text = formattedCode,
                 color = if (timeRemaining <= 5) Color.Red else EmeraldGreen,
                 fontWeight = FontWeight.Bold,
-                fontSize = 28.sp,
+                fontSize = 26.sp,
                 fontFamily = FontFamily.Monospace,
                 letterSpacing = 1.sp
             )
