@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 * 📱 **Latest Released (Phone)**: [v1.6.0](https://github.com/anishcreations/aniAuth/releases/tag/v1.6.0)
-* ⌚ **Latest Released (Wear OS)**: [v1.2.0](https://github.com/anishcreations/aniAuth/releases#release-wear-v1.2.0) 
+* ⌚ **Latest Released (Wear OS)**: [v1.2.0](https://github.com/anishcreations/aniAuth/releases/tag/release-wear-v1.2.0) 
 > **To check full Watch Changelog: [Click Here](WEAROS.md#changelog)**
 
 ## [1.6.0] (2026-07-28)
@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Comprehensive In-App User Manual & Wear OS Sync Guide**: Expanded the in-app user guide into a scrollable, structured manual detailing 2FA code copying, QR scanning, AES KeyStore encryption, password-protected backups, and Wear OS Bluetooth sync & offline security mechanics.
+- **Documentation References**: Added direct links to [README.md Installation Guide](README.md#build-and-installation) and [WEAROS.md Sideloading Guide](WEAROS.md#installation-and-syncing-guide).
 
 ## [1.5.0] (2026-07-20)
 

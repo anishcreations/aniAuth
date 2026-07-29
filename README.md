@@ -19,7 +19,7 @@
 
 <p align="center">
   <a href="https://github.com/anishcreations/aniAuth/releases/tag/v1.6.0"><img src="https://img.shields.io/badge/Phone_Release-v1.6.0-purple?style=for-the-badge&logo=android&logoColor=white" alt="Phone Release" /></a>
-  <a href="https://github.com/anishcreations/aniAuth/releases#release-wear-v1.0.0"><img src="https://img.shields.io/badge/Wear_OS_Release-v1.0.0-blueviolet?style=for-the-badge&logo=android&logoColor=white" alt="Wear OS Release" /></a>
+  <a href="https://github.com/anishcreations/aniAuth/releases/tag/release-wear-v1.2.0"><img src="https://img.shields.io/badge/Wear_OS_Release-v1.2.0-blueviolet?style=for-the-badge&logo=android&logoColor=white" alt="Wear OS Release" /></a>
 </p>
 
 <p align="center">
