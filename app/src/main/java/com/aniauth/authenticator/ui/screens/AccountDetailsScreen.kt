@@ -1,5 +1,6 @@
 package com.aniauth.authenticator.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -14,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,7 +30,8 @@ fun AccountDetailsScreen(
     account: Account,
     onDismiss: () -> Unit,
     onUpdate: (label: String, username: String?) -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onVerifyIdentity: ((title: String, subtitle: String, onSuccess: () -> Unit) -> Unit)? = null
 ) {
     var label by remember { mutableStateOf(account.label) }
     var username by remember { mutableStateOf(account.username ?: "") }
@@ -39,6 +42,7 @@ fun AccountDetailsScreen(
         KeyStoreHelper.decrypt(account.encryptedSecret) ?: "Error decrypting"
     }
     
+    val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
 
     AlertDialog(
@@ -83,7 +87,7 @@ fun AccountDetailsScreen(
                     modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
                 )
 
-                // Read-only Secret Key with Visibility Toggle
+                // Read-only Secret Key with Visibility Toggle & Biometric Auth
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text("Secret Key", color = TextSecondary, fontSize = 12.sp, modifier = Modifier.padding(start = 4.dp, bottom = 4.dp))
                     Surface(
@@ -102,7 +106,22 @@ fun AccountDetailsScreen(
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium
                             )
-                            IconButton(onClick = { isSecretVisible = !isSecretVisible }) {
+                            IconButton(onClick = { 
+                                if (isSecretVisible) {
+                                    isSecretVisible = false
+                                } else {
+                                    if (onVerifyIdentity != null) {
+                                        onVerifyIdentity(
+                                            "Reveal Secret Key",
+                                            "Authenticate identity to view raw secret key"
+                                        ) {
+                                            isSecretVisible = true
+                                        }
+                                    } else {
+                                        isSecretVisible = true
+                                    }
+                                }
+                            }) {
                                 Icon(
                                     imageVector = if (isSecretVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                                     contentDescription = "Toggle Visibility",
@@ -111,7 +130,18 @@ fun AccountDetailsScreen(
                                 )
                             }
                             IconButton(onClick = { 
-                                clipboardManager.setText(AnnotatedString(decryptedSecret))
+                                if (onVerifyIdentity != null) {
+                                    onVerifyIdentity(
+                                        "Copy Secret Key",
+                                        "Authenticate identity to copy secret key"
+                                    ) {
+                                        clipboardManager.setText(AnnotatedString(decryptedSecret))
+                                        Toast.makeText(context, "Secret key copied!", Toast.LENGTH_SHORT).show()
+                                    }
+                                } else {
+                                    clipboardManager.setText(AnnotatedString(decryptedSecret))
+                                    Toast.makeText(context, "Secret key copied!", Toast.LENGTH_SHORT).show()
+                                }
                             }) {
                                 Icon(
                                     Icons.Default.ContentCopy,
@@ -161,7 +191,16 @@ fun AccountDetailsScreen(
                 Button(
                     onClick = {
                         showDeleteConfirmation = false
-                        onDelete()
+                        if (onVerifyIdentity != null) {
+                            onVerifyIdentity(
+                                "Delete Account",
+                                "Authenticate identity to permanently delete ${account.label}"
+                            ) {
+                                onDelete()
+                            }
+                        } else {
+                            onDelete()
+                        }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
                 ) {

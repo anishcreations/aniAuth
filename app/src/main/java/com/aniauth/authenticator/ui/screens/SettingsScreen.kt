@@ -23,6 +23,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import com.aniauth.authenticator.ui.components.LazyColumnScrollHintBox
+import com.aniauth.authenticator.ui.components.ScrollHintBox
 import com.aniauth.authenticator.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,7 +42,9 @@ fun SettingsScreen(
     themeSetting: String,
     onThemeChange: (String) -> Unit,
     isWatchConnected: Boolean = false,
-    onSyncToWatch: () -> Unit = {}
+    onSyncToWatch: () -> Unit = {},
+    isScreenSecurityEnabled: Boolean = true,
+    onToggleScreenSecurity: (Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
     var showPrivacyDialog by remember { mutableStateOf(false) }
@@ -53,6 +60,8 @@ fun SettingsScreen(
     var showAttemptsDialog by remember { mutableStateOf(false) }
     var showWatchGuideDialog by remember { mutableStateOf(false) }
 
+    val lazyListState = rememberLazyListState()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -67,13 +76,17 @@ fun SettingsScreen(
         },
         containerColor = DarkBg
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+        LazyColumnScrollHintBox(
+            lazyListState = lazyListState,
+            modifier = Modifier.padding(padding)
         ) {
+            LazyColumn(
+                state = lazyListState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
             // User Guide Section
             item {
                 SettingsSection(title = "Help") {
@@ -150,6 +163,13 @@ fun SettingsScreen(
                         checked = isLocked,
                         onCheckedChange = onToggleLock
                     )
+                    SettingsToggleItem(
+                        icon = Icons.Default.Shield,
+                        title = "Prevent Screenshots & Recents",
+                        subtitle = "Block screenshots & hide preview in recent apps",
+                        checked = isScreenSecurityEnabled,
+                        onCheckedChange = onToggleScreenSecurity
+                    )
                 }
             }
 
@@ -217,7 +237,7 @@ fun SettingsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        "aniAuth v1.6.0",
+                        "aniAuth v1.7.0",
                         modifier = Modifier
                             .clickable {
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/anishcreations/aniAuth/blob/main/CHANGELOG.md"))
@@ -230,6 +250,7 @@ fun SettingsScreen(
                 }
             }
         }
+    }
     }
 
     if (showPrivacyDialog) {
@@ -501,41 +522,56 @@ fun SettingsScreen(
     }
 
     if (showWatchGuideDialog) {
+        val watchScrollState = rememberScrollState()
         AlertDialog(
             onDismissRequest = { showWatchGuideDialog = false },
             title = {
                 Text("Wear OS Sync Guide", color = PurpleAccent, fontWeight = FontWeight.Bold, fontSize = 20.sp)
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(
-                        "aniAuth supports fully offline 2FA codes on your Wear OS watch. Key sync & security guidelines:",
-                        color = TextPrimary,
-                        fontSize = 14.sp
-                    )
-                    
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row {
-                            Text("• ", color = PurpleAccent, fontWeight = FontWeight.Bold)
-                            Text("Sorting Order: Accounts sync in the exact sorting order active on your phone dashboard at the time of sync.", color = TextSecondary, fontSize = 13.sp)
-                        }
-                        Row {
-                            Text("• ", color = PurpleAccent, fontWeight = FontWeight.Bold)
-                            Text("Limits Change: Changing 'Watch Max PIN Attempts' requires running 'Sync to Watch' to apply the new policy to the watch.", color = TextSecondary, fontSize = 13.sp)
-                        }
-                        Row {
-                            Text("• ", color = PurpleAccent, fontWeight = FontWeight.Bold)
-                            Text("Silent Wipe Duress: Crossing failed attempts silently clears all watch secrets. Perform a new sync to restore them.", color = TextSecondary, fontSize = 13.sp)
-                        }
-                        Row {
-                            Text("• ", color = PurpleAccent, fontWeight = FontWeight.Bold)
-                            Text("Hardware KeyStore: Synced secrets are re-encrypted using the watch's own hardware-backed KeyStore.", color = TextSecondary, fontSize = 13.sp)
+                ScrollHintBox(
+                    scrollState = watchScrollState,
+                    fadeColor = DarkCard
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 350.dp)
+                            .verticalScroll(watchScrollState),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            "aniAuth supports fully offline 2FA codes on your Wear OS watch. Key sync & security guidelines:",
+                            color = TextPrimary,
+                            fontSize = 14.sp
+                        )
+                        
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row {
+                                Text("• ", color = PurpleAccent, fontWeight = FontWeight.Bold)
+                                Text("Sorting Order: Accounts sync in the exact sorting order active on your phone dashboard at the time of sync.", color = TextSecondary, fontSize = 13.sp)
+                            }
+                            Row {
+                                Text("• ", color = PurpleAccent, fontWeight = FontWeight.Bold)
+                                Text("Limits Change: Changing 'Watch Max PIN Attempts' requires running 'Sync to Watch' to apply the new policy to the watch.", color = TextSecondary, fontSize = 13.sp)
+                            }
+                            Row {
+                                Text("• ", color = PurpleAccent, fontWeight = FontWeight.Bold)
+                                Text("Silent Wipe Duress: Crossing failed attempts silently clears all watch secrets. Perform a new sync to restore them.", color = TextSecondary, fontSize = 13.sp)
+                            }
+                            Row {
+                                Text("• ", color = PurpleAccent, fontWeight = FontWeight.Bold)
+                                Text("Hardware KeyStore: Synced secrets are re-encrypted using the watch's own hardware-backed KeyStore.", color = TextSecondary, fontSize = 13.sp)
+                            }
                         }
                     }
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showWatchGuideDialog = false }) {
+                TextButton(
+                    onClick = { showWatchGuideDialog = false },
+                    modifier = Modifier.offset(y = (-6).dp)
+                ) {
                     Text("Got It", color = PurpleAccent, fontWeight = FontWeight.Bold)
                 }
             },

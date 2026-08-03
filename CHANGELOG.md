@@ -6,9 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-* 📱 **Latest Released (Phone)**: [v1.6.0](https://github.com/anishcreations/aniAuth/releases/tag/v1.6.0)
-* ⌚ **Latest Released (Wear OS)**: [v1.2.0](https://github.com/anishcreations/aniAuth/releases/tag/release-wear-v1.2.0) 
+* 📱 **Latest Released (Phone)**: [v1.6.0](https://github.com/anishcreations/aniAuth/releases/tag/v1.7.0)
+* ⌚ **Latest Released (Wear OS)**: [v1.2.0](https://github.com/anishcreations/aniAuth/releases/tag/wear-v1.2.0) 
 > **To check full Watch Changelog: [Click Here](WEAROS.md#changelog)**
+
+## [1.7.0] (2026-08-03)
+
+### Added
+- **Prevent Screenshots & Recents Preview (`FLAG_SECURE`)**: Added a user-configurable security toggle under *Settings → Security* that enforces `FLAG_SECURE`, blocking screen captures and obscuring app contents in the Android Recent Apps switcher.
+- **Biometric Protection for Secret Keys & Deletion**: Mandatory biometric authentication (fingerprint/face/PIN) before revealing plaintext secret keys, copying secret keys to clipboard, or deleting an account in the Account Details screen.
+- **Minimal Animated Scroll Hints**: Floating bouncing down-arrow indicator (`↓`) and 100% theme-matching seamless gradient dissolve on scrollable popups and lists to hint overflow without visual clutter.
 
 ## [1.6.0] (2026-07-28)
 

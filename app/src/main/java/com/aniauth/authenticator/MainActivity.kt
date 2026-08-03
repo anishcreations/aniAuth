@@ -36,6 +36,7 @@ class MainActivity : AppCompatActivity() {
 
     private var isAppLocked by mutableStateOf(false)
     private var isUnlocked by mutableStateOf(false)
+    private var isScreenSecurityEnabled by mutableStateOf(true)
     private var themeSetting by mutableStateOf("system")
     private var pendingExportType: String? = null
     private var isWatchConnected by mutableStateOf(false)
@@ -156,8 +157,10 @@ class MainActivity : AppCompatActivity() {
         
         val prefs = getSharedPreferences("ani_auth_prefs", MODE_PRIVATE)
         isAppLocked = prefs.getBoolean("app_lock_enabled", false)
+        isScreenSecurityEnabled = prefs.getBoolean("screen_security_enabled", true)
         themeSetting = prefs.getString("theme_setting", "system") ?: "system"
 
+        updateScreenSecurity(isScreenSecurityEnabled)
         setupBiometrics()
         setContent { AppContent() }
     }
@@ -280,10 +283,29 @@ class MainActivity : AppCompatActivity() {
                             themeSetting = newTheme
                         },
                         isWatchConnected = isWatchConnected,
-                        onSyncToWatch = { syncToWatch() }
+                        onSyncToWatch = { syncToWatch() },
+                        isScreenSecurityEnabled = isScreenSecurityEnabled,
+                        onToggleScreenSecurity = { enabled ->
+                            getSharedPreferences("ani_auth_prefs", MODE_PRIVATE).edit {
+                                putBoolean("screen_security_enabled", enabled)
+                            }
+                            isScreenSecurityEnabled = enabled
+                            updateScreenSecurity(enabled)
+                        },
+                        onVerifyIdentity = { title, subtitle, onSuccess ->
+                            verifyIdentityBeforeAction(title, subtitle, onSuccess)
+                        }
                     )
                 }
             }
+        }
+    }
+
+    private fun updateScreenSecurity(enabled: Boolean) {
+        if (enabled) {
+            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+        } else {
+            window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
         }
     }
 

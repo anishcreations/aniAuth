@@ -19,7 +19,7 @@
 
 <p align="center">
   <a href="https://github.com/anishcreations/aniAuth/releases/tag/v1.6.0"><img src="https://img.shields.io/badge/Phone_Release-v1.6.0-purple?style=for-the-badge&logo=android&logoColor=white" alt="Phone Release" /></a>
-  <a href="https://github.com/anishcreations/aniAuth/releases/tag/release-wear-v1.2.0"><img src="https://img.shields.io/badge/Wear_OS_Release-v1.2.0-blueviolet?style=for-the-badge&logo=android&logoColor=white" alt="Wear OS Release" /></a>
+  <a href="https://github.com/anishcreations/aniAuth/releases/tag/wear-v1.2.0"><img src="https://img.shields.io/badge/Wear_OS_Release-v1.2.0-blueviolet?style=for-the-badge&logo=android&logoColor=white" alt="Wear OS Release" /></a>
 </p>
 
 <p align="center">
@@ -53,6 +53,8 @@
 ### Premium Security
 - **Hardware-Backed Encryption**: Master encryption keys are stored securely within the device's Secure Element (SE) or Trusted Execution Environment (TEE) via the Android KeyStore.
 - **Biometric & Device Lock**: Optional biometric prompt (fingerprint or face unlock) required on app startup, with native device credentials (PIN/pattern/password) fallback to prevent lockouts.
+- **Biometric Protection for Keys & Deletion**: Mandatory biometric authentication required before revealing plaintext secret keys, copying secret keys to clipboard, or deleting an account.
+- **Prevent Screenshots & Recents Preview (`FLAG_SECURE`)**: User-configurable toggle in Settings that enforces `FLAG_SECURE`, blocking screen captures and obscuring app previews in the Android Recent Apps switcher.
 - **Zero Network Footprint**: Fully offline. The app requests no internet permission whatsoever. (Note: Google Play Services handles ML model downloads at the OS level, keeping the app completely sandboxed from the network).
 
 ### Wear OS Integration
@@ -60,8 +62,7 @@
 - **Customizable Duress PIN**: Configure the maximum allowed PIN attempts (e.g., 3, 6, 9, or unlimited) on your watch directly from the phone app. If the limit is exceeded, all watch accounts are silently wiped to protect your data.
 
 ### Aesthetic UI/UX
-- **Aesthetic Light & Dark Themes**: Modern, high-contrast themes built with Jetpack Compose Material 3. Features a premium "Obsidian-Violet" dark mode, and a sleek, high-readability light mode.
-- **Dynamic Theme Selector**: Choose between Light Mode, Dark Mode, or System Default dynamically in the settings panel.
+- **Dynamic Themes & Theme Selector**: Choose between Light Mode, Dark Mode, or System Default dynamically in the settings panel.
 - **Persistent Account Sorting**: Sort accounts dynamically by Date Added, Alphabetical (A-Z), or Alphabetical (Z-A), with your selection automatically saved.
 - **Dynamic Alphabet Scroll Overlay**: Sleek fast-scroll sidebar on the right margin with elastic letter magnification, tactile feedback clicks, and a floating preview bubble that follows your finger. Automatically stays faint and out of focus when idle, lighting up dynamically when you scroll or hover to keep the dashboard clutter-free.
 - **Dedicated Settings Screen**: Access theme configurations, data management (encrypted backups/imports), biometric security toggles, policy details, and guides in one centralized screen.
@@ -71,6 +72,7 @@
 - **Flexible Backup Exports**: Export backups in secure Encrypted format (AES-256 encrypted with aniAuth's internal key) or Decrypted format (plaintext JSON) with built-in warnings.
 - **Account Management**: Long-press any card to securely view decrypted secret keys, edit account metadata, or delete credentials.
 - **Adaptive Launcher Icon**: Creative geometric "A" icon with glowing arches designed for modern home screen styling.
+- **Minimal Animated Scroll Hints**: Bouncing down-arrow indicators (`↓`) and 100% theme-matching seamless gradient dissolves on scrollable popups and lists to hint overflow without visual clutter.
 
 ---
 

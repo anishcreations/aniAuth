@@ -72,6 +72,7 @@ import com.aniauth.authenticator.crypto.KeyStoreHelper
 import com.aniauth.authenticator.crypto.TotpGenerator
 import com.aniauth.authenticator.model.Account
 import com.aniauth.authenticator.model.AccountRepository
+import com.aniauth.authenticator.ui.components.ScrollHintBox
 import com.aniauth.authenticator.ui.theme.*
 import kotlinx.coroutines.delay
 
@@ -86,7 +87,10 @@ fun DashboardScreen(
     themeSetting: String,
     onThemeChange: (String) -> Unit,
     isWatchConnected: Boolean = false,
-    onSyncToWatch: () -> Unit = {}
+    onSyncToWatch: () -> Unit = {},
+    isScreenSecurityEnabled: Boolean = true,
+    onToggleScreenSecurity: (Boolean) -> Unit = {},
+    onVerifyIdentity: ((title: String, subtitle: String, onSuccess: () -> Unit) -> Unit)? = null
 ) {
     val context = LocalContext.current
     var accounts by remember { mutableStateOf(repository.getAccounts()) }
@@ -421,7 +425,7 @@ fun DashboardScreen(
                         Spacer(modifier = Modifier.height(24.dp))
                         val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
                         Text(
-                            text = "aniAuth v1.6.0",
+                            text = "aniAuth v1.7.0",
                             color = TextSecondary.copy(alpha = 0.3f),
                             fontSize = 11.sp,
                             fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
@@ -508,7 +512,7 @@ fun DashboardScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "aniAuth v1.6.0",
+                                    text = "aniAuth v1.7.0",
                                     color = SoftFooterColor.copy(alpha = 0.3f),
                                     fontSize = 11.sp,
                                     fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
@@ -644,7 +648,9 @@ fun DashboardScreen(
             themeSetting = themeSetting,
             onThemeChange = onThemeChange,
             isWatchConnected = isWatchConnected,
-            onSyncToWatch = onSyncToWatch
+            onSyncToWatch = onSyncToWatch,
+            isScreenSecurityEnabled = isScreenSecurityEnabled,
+            onToggleScreenSecurity = onToggleScreenSecurity
         )
     }
 
@@ -673,13 +679,15 @@ fun DashboardScreen(
                 accounts = repository.getAccounts()
                 selectedAccountForDetails = null
                 Toast.makeText(context, "Account deleted", Toast.LENGTH_SHORT).show()
-            }
+            },
+            onVerifyIdentity = onVerifyIdentity
         )
     }
 }
 
 @Composable
 fun UserManualDialog(onDismiss: () -> Unit) {
+    val scrollState = rememberScrollState()
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -690,39 +698,47 @@ fun UserManualDialog(onDismiss: () -> Unit) {
             }
         },
         text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 420.dp)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ScrollHintBox(
+                scrollState = scrollState,
+                fadeColor = DarkCard
             ) {
-                Text("📱 Dashboard & Quick Actions", color = PurpleAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                GuideItem(Icons.Default.TouchApp, "Tap to Copy: Single-tap any account card to copy its 6-digit TOTP code instantly to your clipboard.")
-                GuideItem(Icons.Default.AdsClick, "Account Details: Tap and hold (long-press) any card to edit details, view the secret key, or delete the account.")
-                GuideItem(Icons.Default.QrCodeScanner, "QR Camera Scanner: Tap the scanner button to scan 2FA QR codes powered by ML Kit Vision API.")
-                GuideItem(Icons.Default.Add, "Manual Addition: Tap the + button to manually type account labels and secret keys.")
-                GuideItem(Icons.AutoMirrored.Filled.Sort, "Account Sorting: Tap the top bar sort icon to toggle Default (Date Added), A-Z, or Z-A sorting.")
-                GuideItem(Icons.Default.SwapVert, "Alphabet Sidebar: Drag or tap the right-edge letter bar to jump directly to accounts by initial.")
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 420.dp)
+                        .verticalScroll(scrollState),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text("📱 Dashboard & Quick Actions", color = PurpleAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    GuideItem(Icons.Default.TouchApp, "Tap to Copy: Single-tap any account card to copy its 6-digit TOTP code instantly to your clipboard.")
+                    GuideItem(Icons.Default.AdsClick, "Account Details: Tap and hold (long-press) any card to edit details, view the secret key, or delete the account.")
+                    GuideItem(Icons.Default.QrCodeScanner, "QR Camera Scanner: Tap the scanner button to scan 2FA QR codes powered by ML Kit Vision API.")
+                    GuideItem(Icons.Default.Add, "Manual Addition: Tap the + button to manually type account labels and secret keys.")
+                    GuideItem(Icons.AutoMirrored.Filled.Sort, "Account Sorting: Tap the top bar sort icon to toggle Default (Date Added), A-Z, or Z-A sorting.")
+                    GuideItem(Icons.Default.SwapVert, "Alphabet Sidebar: Drag or tap the right-edge letter bar to jump directly to accounts by initial.")
 
-                HorizontalDivider(color = BorderColor.copy(alpha = 0.5f), thickness = 1.dp)
+                    HorizontalDivider(color = BorderColor.copy(alpha = 0.5f), thickness = 1.dp)
 
-                Text("⏱️ Global Timer & Security", color = PurpleAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                GuideItem(Icons.Default.Timer, "Single Global Timer: The circular ring in the search bar counts down the 30-second TOTP step for all accounts in unison.")
-                GuideItem(Icons.Default.Security, "Hardware KeyStore Encryption: Secrets are encrypted locally using AES-GCM backed by Android KeyStore TEE/SE.")
-                GuideItem(Icons.Default.Backup, "Encrypted Backups: Export and import password-protected JSON backup files safely from Settings.")
+                    Text("⏱️ Global Timer & Security", color = PurpleAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    GuideItem(Icons.Default.Timer, "Single Global Timer: The circular ring in the search bar counts down the 30-second TOTP step for all accounts in unison.")
+                    GuideItem(Icons.Default.Security, "Hardware KeyStore Encryption: Secrets are encrypted locally using AES-GCM backed by Android KeyStore TEE/SE.")
+                    GuideItem(Icons.Default.Backup, "Encrypted Backups: Export and import password-protected JSON backup files safely from Settings.")
 
-                HorizontalDivider(color = BorderColor.copy(alpha = 0.5f), thickness = 1.dp)
+                    HorizontalDivider(color = BorderColor.copy(alpha = 0.5f), thickness = 1.dp)
 
-                Text("⌚ Wear OS Watch Companion Sync Guide", color = PurpleAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                GuideItem(Icons.Default.Watch, "Bluetooth Sync: Open Settings and tap 'Sync to Watch' (requires biometric auth) to push accounts to your paired Wear OS smartwatch via Google Play Services DataLayer.")
-                GuideItem(Icons.Default.WifiOff, "100% Offline Watch TOTP: Once synced, the Wear OS watch app generates TOTP codes fully offline without requiring a connected phone or internet.")
-                GuideItem(Icons.Default.Lock, "Watch Instant Auto-Lock: The watch app locks instantly when minimized or when the watch screen dims.")
-                GuideItem(Icons.Default.Shield, "Silent Duress Protection: If max failed PIN attempts (configurable in Settings: 3, 6, 9, or unlimited) are reached on the watch, watch accounts are silently wiped to prevent theft.")
+                    Text("⌚ Wear OS Watch Companion Sync Guide", color = PurpleAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    GuideItem(Icons.Default.Watch, "Bluetooth Sync: Open Settings and tap 'Sync to Watch' (requires biometric auth) to push accounts to your paired Wear OS smartwatch via Google Play Services DataLayer.")
+                    GuideItem(Icons.Default.WifiOff, "100% Offline Watch TOTP: Once synced, the Wear OS watch app generates TOTP codes fully offline without requiring a connected phone or internet.")
+                    GuideItem(Icons.Default.Lock, "Watch Instant Auto-Lock: The watch app locks instantly when minimized or when the watch screen dims.")
+                    GuideItem(Icons.Default.Shield, "Silent Duress Protection: If max failed PIN attempts (configurable in Settings: 3, 6, 9, or unlimited) are reached on the watch, watch accounts are silently wiped to prevent theft.")
+                }
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.offset(y = (-6).dp)
+            ) {
                 Text("Got it", color = PurpleAccent, fontWeight = FontWeight.Bold)
             }
         },
