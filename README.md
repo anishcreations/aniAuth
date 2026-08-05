@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/anishcreations/aniAuth/releases/tag/v1.6.0"><img src="https://img.shields.io/badge/Phone_Release-v1.6.0-purple?style=for-the-badge&logo=android&logoColor=white" alt="Phone Release" /></a>
+  <a href="https://github.com/anishcreations/aniAuth/releases/tag/v1.7.0"><img src="https://img.shields.io/badge/Phone_Release-v1.7.0-purple?style=for-the-badge&logo=android&logoColor=white" alt="Phone Release" /></a>
   <a href="https://github.com/anishcreations/aniAuth/releases/tag/wear-v1.2.0"><img src="https://img.shields.io/badge/Wear_OS_Release-v1.2.0-blueviolet?style=for-the-badge&logo=android&logoColor=white" alt="Wear OS Release" /></a>
 </p>
 
@@ -215,7 +215,7 @@ The `AccountSerializer.fromJson()` parser handles multiple formats:
 
 ### Pre-built Downloads
 Skip compiling from source and grab the latest pre-compiled packages directly:
-* 📱 **Android Phone App**: [aniAuth-phone-v1.3.0.apk](https://github.com/anishcreations/aniAuth/releases/tag/v1.3.0)
+* 📱 **Android Phone App**: [aniAuth-v1.7.0.apk](https://github.com/anishcreations/aniAuth/releases/tag/v1.7.0)
 * ⌚ **Wear OS Companion App**: [aniAuth-wear-v1.0.0.apk](https://github.com/anishcreations/aniAuth/releases#release-wear-v1.0.0) — *(See [Watch Installation & Sideloading Guide](WEAROS.md#watch-installation-guide))*
 
 ### Prerequisites

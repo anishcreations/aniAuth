@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-* 📱 **Latest Released (Phone)**: [v1.6.0](https://github.com/anishcreations/aniAuth/releases/tag/v1.7.0)
+* 📱 **Latest Released (Phone)**: [v1.7.0](https://github.com/anishcreations/aniAuth/releases/tag/v1.7.0)
 * ⌚ **Latest Released (Wear OS)**: [v1.2.0](https://github.com/anishcreations/aniAuth/releases/tag/wear-v1.2.0) 
 > **To check full Watch Changelog: [Click Here](WEAROS.md#changelog)**
 
