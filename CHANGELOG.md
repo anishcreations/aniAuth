@@ -6,11 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
-* 📱 **Latest Released (Phone)**: [v1.7.0](https://github.com/anishcreations/aniAuth/releases/tag/v1.7.0)
-* ⌚ **Latest Released (Wear OS)**: [v1.2.0](https://github.com/anishcreations/aniAuth/releases/tag/wear-v1.2.0) 
+* 📱 **Latest Release (Phone)**: [v1.8.0](https://github.com/anishcreations/aniAuth/releases/tag/v1.8.0)
+* ⌚ **Latest Release (Wear OS)**: [v1.3.0](https://github.com/anishcreations/aniAuth/releases/tag/wear-v1.3.0)
 > **To check full Watch Changelog: [Click Here](WEAROS.md#changelog)**
 
-## [Unreleased]
+## [1.8.0] (2026-10-11)
+
+Companion watch release: [v1.3.0](https://github.com/anishcreations/aniAuth/releases/tag/wear-v1.3.0). See the [watch changelog](WEAROS.md#changelog).
 
 ### Added
 - **Tap-to-Copy Setting**: Disable tapping account cards to copy OTP codes from Settings → Interaction. Enabled by default; long-press account details and protected secret-key copying remain available.

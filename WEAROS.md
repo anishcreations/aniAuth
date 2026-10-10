@@ -1,6 +1,6 @@
 # aniAuth Wear OS Companion 
 
-Welcome to the dedicated documentation page for the **aniAuth Wear OS Companion** app (latest tagged release: `v1.2.0`). The source includes additional changes listed under [Unreleased](#changelog).
+Welcome to the dedicated documentation page for the **aniAuth Wear OS Companion** app (latest release: [v1.3.0](https://github.com/anishcreations/aniAuth/releases/tag/wear-v1.3.0)). See the [watch changelog](#changelog).
 
 This companion module allows you to securely view your 2FA TOTP codes directly on your wrist (designed primarily for Galaxy Watch and Wear OS devices).
 
@@ -131,7 +131,7 @@ After the initial sync, the watch is 100% self-sufficient:
 You can install the Wear OS companion app using one of the following methods:
 
 #### Method 1: Sideloading Pre-built APK via ADB over Wi-Fi
-If you downloaded the pre-built `aniAuth-wear-v1.0.0.apk` from GitHub Releases, you can install it using a terminal/command prompt:
+Download `aniAuth-wear-v1.3.0.apk` from [GitHub Releases](https://github.com/anishcreations/aniAuth/releases/tag/wear-v1.3.0), then install it using a terminal/command prompt:
 
 1. **Install Android Platform Tools (ADB)**:
    - **macOS**: Install using Homebrew:
@@ -163,7 +163,7 @@ If you downloaded the pre-built `aniAuth-wear-v1.0.0.apk` from GitHub Releases, 
 5. **Install the watch APK**:
    - Run the install command with the path to your downloaded watch APK:
      ```bash
-     adb install aniAuth-wear-v1.0.0.apk
+     adb install -r aniAuth-wear-v1.3.0.apk
      ```
 
 #### Method 2: Running via Android Studio (From Source)
@@ -230,7 +230,7 @@ wearos/
 
 ## Changelog
 
-### [Unreleased]
+### [1.3.0] (2026-10-11)
 - **UI Consistency**: Match the phone's purple accents, dark surfaces, and muted blue controls. Flatten account card backgrounds, clarify code typography, truncate long labels, and improve footer and error-text contrast. PIN verification, sync, OTP generation, and rotary scrolling behavior are unchanged.
 
 ### [1.2.0] (2026-07-25)

@@ -1,5 +1,6 @@
 package com.aniauth.authenticator.ui.screens
 
+import com.aniauth.authenticator.BuildConfig
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -253,7 +254,7 @@ fun SettingsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        "aniAuth v1.7.0",
+                        "aniAuth v${BuildConfig.VERSION_NAME}",
                         modifier = Modifier
                             .clickable {
                                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/anishcreations/aniAuth/blob/main/CHANGELOG.md"))

@@ -101,7 +101,7 @@ class UiSmokeTest {
             compose.onNodeWithText("GitHub").assertIsDisplayed()
             capture("dashboard-dark")
             compose.onAllNodes(hasScrollToIndexAction()).onLast()
-                .performScrollToNode(hasText("aniAuth v1.7.0"))
+                .performScrollToNode(hasText("aniAuth v${BuildConfig.VERSION_NAME}"))
             capture("footer-dark")
             assertEquals(4, repository.getAccounts().size)
         }

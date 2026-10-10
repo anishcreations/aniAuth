@@ -1,5 +1,6 @@
 package com.aniauth.authenticator.ui.screens
 
+import com.aniauth.authenticator.BuildConfig
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -435,7 +436,7 @@ fun DashboardScreen(
                         Spacer(modifier = Modifier.height(24.dp))
                         val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
                         Text(
-                            text = "aniAuth v1.7.0",
+                            text = "aniAuth v${BuildConfig.VERSION_NAME}",
                             color = TextSecondary,
                             fontSize = 11.sp,
                             fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
@@ -526,7 +527,7 @@ fun DashboardScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = "aniAuth v1.7.0",
+                                        text = "aniAuth v${BuildConfig.VERSION_NAME}",
                                         color = SoftFooterColor,
                                         fontSize = 11.sp,
                                         fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,

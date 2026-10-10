@@ -599,7 +599,7 @@ fun WatchDashboard(accounts: List<Account>) {
                 }
                 item {
                     Text(
-                        text = "aniAuth v1.2.0 (watch)",
+                        text = "aniAuth v${BuildConfig.VERSION_NAME} (watch)",
                         fontSize = 9.sp,
                         color = WatchSecondaryText,
                         modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)

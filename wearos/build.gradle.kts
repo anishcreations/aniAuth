@@ -12,8 +12,8 @@ android {
         applicationId = "com.aniauth.authenticator"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.2.0"
+        versionCode = 4
+        versionName = "1.3.0"
         resourceConfigurations.addAll(listOf("en"))
 
         vectorDrawables {
@@ -45,6 +45,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
