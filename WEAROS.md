@@ -1,6 +1,6 @@
 # aniAuth Wear OS Companion 
 
-Welcome to the dedicated documentation page for the **aniAuth Wear OS Companion** app (`v1.2.0`). 
+Welcome to the dedicated documentation page for the **aniAuth Wear OS Companion** app (latest tagged release: `v1.2.0`). The source includes additional changes listed under [Unreleased](#changelog).
 
 This companion module allows you to securely view your 2FA TOTP codes directly on your wrist (designed primarily for Galaxy Watch and Wear OS devices).
 
@@ -19,11 +19,11 @@ This companion module allows you to securely view your 2FA TOTP codes directly o
 
 ## Key Features
 - **Instant Wrist Codes:** View live 6-digit TOTP codes with a clean, circular Wear OS interface optimized for round screens.
-- **Obsidian-Violet Styling:** A beautiful, dark AMOLED theme using the same Obsidian-Violet palette as the phone app (`Color(0xFF08070A)` background, `Color(0xFFC084FC)` accents).
+- **Matching Phone Styling:** Dark surfaces and purple accents coordinated with the phone, solid muted blue PIN keys, flat account cards, and readable monochrome OTP codes. Long account labels and usernames truncate to preserve code space.
 - **Fully Offline After Sync:** Once synced, your watch generates TOTP codes independently using its own local clock and local copy of the RFC 6238 algorithm — no phone or internet connection needed.
 - **Zero Scroll Lag:** Employs a self-contained `GlobalTimerHeader` composable (with its own isolated `LaunchedEffect` timer at 500ms intervals) so the account list only recomposes once every 30 seconds when TOTP codes actually change.
 - **Biometric-Protected Syncing:** Transfer accounts wirelessly from your phone with a single tap, protected by your phone's biometric/device credential locks.
-- **Rotary Bezel Haptic Feedback & Step Snapping:** Navigate through your accounts using your watch's physical rotating bezel or digital crown with crisp tactile haptic vibration feedback for every notch turned, scrolling precisely 1 account card per bezel detent.
+- **Rotary Bezel Haptic Feedback:** Scroll using the physical bezel or digital crown, with soft haptic ticks as rotary movement accumulates. Touch scrolling stays silent.
 - **Dynamic Circular Scaling List:** Automatically centers active account items in the circular viewport at 100% full width, while dynamically scaling and fading items above and below into a sleek curved round arc.
 - **Instant Lock & Duress Wipe:** Secures your keys with a 4-digit PIN setup featuring iOS-style circular dot indicators. Locks instantly via `onPause()` on screen dim, backgrounding, or side-button presses. Includes a duress limit that silently wipes accounts after a customizable number of incorrect attempts (configured via the phone app).
 
@@ -66,9 +66,9 @@ Phone App                              Bluetooth                    Watch App
 ```
 
 ### Key Technical Details
-- **Matching Application ID:** Both apps use `com.aniauth.authenticator` as their `applicationId` and are signed with the same developer key. This is required by Google Play Services for Bluetooth pairing.
-- **Watch Presence Detection:** The phone app queries `Wearable.getNodeClient(context).connectedNodes` in the background. The "Sync to Watch" row in Settings only renders when at least one connected watch node is detected.
-- **Message Path:** Data is transmitted via `Wearable.getMessageClient().sendMessage(nodeId, "/sync-accounts", jsonBytes)` over the secure Bluetooth data layer.
+- **Matching App Identity:** Both apps use `com.aniauth.authenticator` as their `applicationId` and must be signed with the same key for app-to-app Wear OS Data Layer communication.
+- **Watch Presence Detection:** When the phone app resumes, it queries `Wearable.getNodeClient(context).connectedNodes`. The "Sync to Watch" row appears only when a connected Wear OS node is detected. Bluetooth settings can show a connection even when the Wear OS Data Layer is unavailable.
+- **Message Path:** Data is transmitted via `Wearable.getMessageClient().sendMessage(nodeId, "/sync-accounts", jsonBytes)` through the Wear OS Data Layer.
 - **WearableListenerService:** The watch registers `WearSyncService` in its `AndroidManifest.xml` as a receiver bound to the Wearable message intent filter. The service wakes automatically when a message arrives on the `/sync-accounts` path.
 - **Re-encryption on Watch:** The phone decrypts secrets from its own KeyStore (`AniAuthMasterKey`) before sending. The watch then encrypts each secret with its own independent KeyStore key (`AniAuthWatchMasterKey`). This means the phone's and watch's encrypted blobs are completely different — neither can decrypt the other's data.
 
@@ -180,8 +180,8 @@ If you downloaded the pre-built `aniAuth-wear-v1.0.0.apk` from GitHub Releases, 
 3. Confirm the PIN. You will see a clean empty dashboard: *"No accounts synced. Tap 'Sync to Watch' on your phone app."*
 
 ### Syncing Accounts
-4. Open the aniAuth phone app → **Settings** → scroll to *Data & Backup*.
-5. Tap **Sync to Watch** (only visible when a watch is connected via Bluetooth).
+4. Open the aniAuth phone app → **Settings** → scroll to *Wear OS Watch*.
+5. Tap **Sync to Watch** (only visible when the Wear OS Data Layer reports a connected watch).
 6. Verify your identity with fingerprint/face/device credentials.
 7. Your watch will display a Toast confirmation and instantly populate with your 2FA accounts!
 
@@ -230,6 +230,9 @@ wearos/
 
 ## Changelog
 
+### [Unreleased]
+- **UI Consistency**: Match the phone's purple accents, dark surfaces, and muted blue controls. Flatten account card backgrounds, clarify code typography, truncate long labels, and improve footer and error-text contrast. PIN verification, sync, OTP generation, and rotary scrolling behavior are unchanged.
+
 ### [1.2.0] (2026-07-25)
 - **Fluid Hardware Rotary Bezel Scrolling**: Direct hardware-accelerated rotary bezel scroll physics for 60fps/90fps buttery-smooth motion with zero fling delay.
 - **Rotary Bezel-Exclusive Soft Haptic Feedback**: Tactile `CLOCK_TICK` haptic feedback ticks trigger exclusively during physical rotary bezel rotation (touch/hand scrolling remains completely silent).
@@ -259,9 +262,10 @@ First official release of the aniAuth Wear OS companion app, featuring:
 ## Troubleshooting
 
 ### The "Sync to Watch" option doesn't show up in phone Settings!
-- Make sure **Bluetooth** is enabled on both devices.
-- *Ensure your watch is connected and paired via the **Galaxy Wearable** or **Wear OS by Google** companion app.
-- Both the phone and watch modules must share the exact same **Application ID** (`com.aniauth.authenticator`) and be signed with the **same developer certificate key**. If the signing keys are mismatched, Google Play Services will block pairing communication for security reasons.
+- Complete pairing through the appropriate companion app, such as **Galaxy Wearable**, **Google Pixel Watch**, or **Wear OS by Google**. A Bluetooth connection alone is not enough for the Wear OS Data Layer.
+- Return to the phone app after pairing so it refreshes its connected-node check.
+- For emulators, use **Android Studio → Device Manager → Pair Wearable** and complete companion-app setup. Use a Google Play-enabled phone image running Android 11 or later. See the [official emulator pairing guide](https://developer.android.com/training/wearables/get-started/connect-phone).
+- Install the phone and watch modules with matching **Application IDs** (`com.aniauth.authenticator`) and the **same signing certificate** for app-to-app data exchange.
 
 ### Sync completes but watch shows "No accounts synced"
 - Check that you have at least one account on the phone app.

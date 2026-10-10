@@ -493,7 +493,8 @@ fun DashboardScreen(
                                 modifier = Modifier.fillMaxWidth()
                                     .heightIn(min = if (isLandscape) 96.dp else 144.dp)
                                     .padding(top = 12.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(20.dp)
                             ) {
                                 Surface(
                                     onClick = { showManual = true },
@@ -501,9 +502,6 @@ fun DashboardScreen(
                                     shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .offset(y = 5.dp)
-                                        .padding(end = if (isLandscape) 0.dp else 72.dp)
-                                        .padding(bottom = 8.dp)
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(16.dp),
@@ -524,8 +522,7 @@ fun DashboardScreen(
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .offset(x = if (isLandscape) (listEndPadding - cardMargin) / 2 else 0.dp)
-                                        .padding(vertical = 8.dp),
+                                        .offset(x = if (isLandscape) (listEndPadding - cardMargin) / 2 else 0.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(

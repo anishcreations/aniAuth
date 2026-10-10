@@ -16,8 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Tap-to-Copy Setting**: Disable tapping account cards to copy OTP codes from Settings → Interaction. Enabled by default; long-press account details and protected secret-key copying remain available.
 
 ### Changed
-- **Dashboard Balance**: Brighter purple accents, balanced portrait card margins with a tiny gap beside the alphabet slider, a slightly raised slider, and a shorter footer scroll area with a centered version label.
-- **Phone UI Refinement**: Quieter purple accents, balanced light/dark surfaces, clearer account codes, consistent type and spacing, flatter account cards, and more readable settings and dialogs. Existing flows and authentication behavior are preserved.
+- **Phone UI Refinement**: Refine light/dark surfaces, purple accents, solid muted blue add-account button, code typography, settings, and dialogs. Balance card margins with a tiny gap beside the raised alphabet slider, and use a full-width manual link with consistent spacing above the centered version footer. Existing authentication and account flows are preserved.
+- **Watch UI Refinement**: Match the phone's colors and account styling while preserving watch PIN, sync, OTP, and rotary behavior. See the [dedicated watch changelog](WEAROS.md#changelog) for details.
 
 ### Fixed
 - **Face Unlock Compatibility**: Accept Android-supported Class 2 or stronger face/fingerprint authentication for app unlock, secret key reveal/copy, account deletion, backup export, and watch sync, with device PIN, pattern, or password fallback. Face unlock must be exposed to apps by Android.

@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.*
@@ -183,17 +184,24 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+private val WatchOutline = Color(0xFF49454F)
+private val WatchSecondaryText = Color(0xFFB7B2C0)
+
 @Composable
 fun aniAuthWatchTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colors = Colors(
-            primary = Color(0xFFC084FC),
-            primaryVariant = Color(0xFF9333EA),
-            secondary = Color(0xFFE9D5FF),
-            background = Color(0xFF08070A),
-            onPrimary = Color.Black,
-            onSecondary = Color.Black,
-            onBackground = Color.White
+            primary = Color(0xFFBA9CFF),
+            primaryVariant = Color(0xFF493064),
+            secondary = Color(0xFF273D59),
+            background = Color(0xFF100D17),
+            surface = Color(0xFF20192C),
+            error = Color(0xFFFFB4AB),
+            onPrimary = Color(0xFF2E204C),
+            onSecondary = Color(0xFFDCE8FA),
+            onBackground = Color(0xFFECEAF0),
+            onSurface = Color(0xFFECEAF0),
+            onError = Color(0xFF690005)
         ),
         content = content
     )
@@ -235,12 +243,12 @@ fun PinSetupScreen(onPinConfigured: (String) -> Unit) {
                     modifier = Modifier
                         .size(8.dp)
                         .background(
-                            color = if (isFilled) Color(0xFFC084FC) else Color.Transparent,
+                            color = if (isFilled) MaterialTheme.colors.primary else Color.Transparent,
                             shape = CircleShape
                         )
                         .border(
                             width = 1.dp,
-                            color = if (isFilled) Color(0xFFC084FC) else Color(0xFF4A3E5D),
+                            color = if (isFilled) MaterialTheme.colors.primary else WatchOutline,
                             shape = CircleShape
                         )
                 )
@@ -253,7 +261,7 @@ fun PinSetupScreen(onPinConfigured: (String) -> Unit) {
             Text(
                 text = errorMsg,
                 fontSize = 8.sp,
-                color = Color.Red,
+                color = MaterialTheme.colors.error,
                 textAlign = TextAlign.Center
             )
         } else {
@@ -319,7 +327,7 @@ fun PinLockScreen(onCorrectPin: () -> Unit, onDataWiped: () -> Unit) {
         Text(
             text = "Enter Watch PIN",
             fontSize = 10.sp,
-            color = Color.LightGray,
+            color = WatchSecondaryText,
             textAlign = TextAlign.Center
         )
         
@@ -335,12 +343,12 @@ fun PinLockScreen(onCorrectPin: () -> Unit, onDataWiped: () -> Unit) {
                     modifier = Modifier
                         .size(8.dp)
                         .background(
-                            color = if (isFilled) Color(0xFFC084FC) else Color.Transparent,
+                            color = if (isFilled) MaterialTheme.colors.primary else Color.Transparent,
                             shape = CircleShape
                         )
                         .border(
                             width = 1.dp,
-                            color = if (isFilled) Color(0xFFC084FC) else Color(0xFF4A3E5D),
+                            color = if (isFilled) MaterialTheme.colors.primary else WatchOutline,
                             shape = CircleShape
                         )
                 )
@@ -353,7 +361,7 @@ fun PinLockScreen(onCorrectPin: () -> Unit, onDataWiped: () -> Unit) {
             Text(
                 text = errorMsg,
                 fontSize = 8.sp,
-                color = Color.Red,
+                color = MaterialTheme.colors.error,
                 textAlign = TextAlign.Center
             )
         } else {
@@ -428,8 +436,8 @@ fun WatchKeypad(onDigit: (String) -> Unit, onBackspace: () -> Unit) {
                             modifier = Modifier
                                 .width(42.dp)
                                 .height(26.dp)
-                                .background(Color(0xFF1E1B2C), shape = RoundedCornerShape(8.dp))
-                                .border(1.dp, Color(0xFF2C243B), shape = RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colors.secondary, shape = RoundedCornerShape(8.dp))
+                                .border(1.dp, Color(0xFF3D5573), shape = RoundedCornerShape(8.dp))
                                 .clickable(onClick = onBackspace),
                             contentAlignment = Alignment.Center
                         ) {
@@ -437,7 +445,7 @@ fun WatchKeypad(onDigit: (String) -> Unit, onBackspace: () -> Unit) {
                                 imageVector = Icons.Default.Backspace,
                                 contentDescription = "Backspace",
                                 modifier = Modifier.size(14.dp),
-                                tint = Color.White
+                                tint = MaterialTheme.colors.onSecondary
                             )
                         }
                     } else if (item.isNotEmpty()) {
@@ -445,12 +453,12 @@ fun WatchKeypad(onDigit: (String) -> Unit, onBackspace: () -> Unit) {
                             modifier = Modifier
                                 .width(42.dp)
                                 .height(26.dp)
-                                .background(Color(0xFF1E1B2C), shape = RoundedCornerShape(8.dp))
-                                .border(1.dp, Color(0xFF2C243B), shape = RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colors.secondary, shape = RoundedCornerShape(8.dp))
+                                .border(1.dp, Color(0xFF3D5573), shape = RoundedCornerShape(8.dp))
                                 .clickable { onDigit(item) },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(text = item, fontSize = 13.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                            Text(text = item, fontSize = 13.sp, color = MaterialTheme.colors.onSecondary, fontWeight = FontWeight.Medium)
                         }
                     } else {
                         Spacer(modifier = Modifier.width(42.dp).height(26.dp))
@@ -463,6 +471,7 @@ fun WatchKeypad(onDigit: (String) -> Unit, onBackspace: () -> Unit) {
 
 @Composable
 fun GlobalTimerHeader() {
+    val colors = MaterialTheme.colors
     var timeRemaining by remember { mutableStateOf(30L) }
     
     LaunchedEffect(Unit) {
@@ -481,11 +490,11 @@ fun GlobalTimerHeader() {
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawCircle(
-                color = Color(0xFF2C243B),
+                color = WatchOutline,
                 style = Stroke(width = 2.dp.toPx())
             )
             drawArc(
-                color = if (timeRemaining <= 5) Color.Red else Color(0xFFC084FC),
+                color = if (timeRemaining <= 5) colors.error else colors.primary,
                 startAngle = -90f,
                 sweepAngle = (timeRemaining.toFloat() / 30f) * 360f,
                 useCenter = false,
@@ -496,7 +505,7 @@ fun GlobalTimerHeader() {
             text = timeRemaining.toString(),
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = colors.onBackground
         )
     }
 }
@@ -542,14 +551,14 @@ fun WatchDashboard(accounts: List<Account>) {
                 Text(
                     text = "No accounts synced.",
                     fontSize = 12.sp,
-                    color = Color.LightGray,
+                    color = WatchSecondaryText,
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Tap 'Sync to Watch' on your phone app.",
                     fontSize = 9.sp,
-                    color = Color.Gray,
+                    color = WatchSecondaryText,
                     textAlign = TextAlign.Center
                 )
             }
@@ -592,7 +601,7 @@ fun WatchDashboard(accounts: List<Account>) {
                     Text(
                         text = "aniAuth v1.2.0 (watch)",
                         fontSize = 9.sp,
-                        color = Color.LightGray.copy(alpha = 0.4f),
+                        color = WatchSecondaryText,
                         modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
                     )
                 }
@@ -627,16 +636,16 @@ fun WatchAccountCard(account: Account, currentEpoch: Long) {
         onClick = { /* Disable click actions */ },
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
-            .border(1.dp, Color(0xFF2A2238), shape = RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
+            .heightIn(min = 60.dp)
+            .border(1.dp, WatchOutline, shape = RoundedCornerShape(14.dp)),
+        shape = RoundedCornerShape(14.dp),
         backgroundPainter = CardDefaults.cardBackgroundPainter(
-            startBackgroundColor = Color(0xFF130F1C),
-            endBackgroundColor = Color(0xFF1C172B)
+            startBackgroundColor = MaterialTheme.colors.surface,
+            endBackgroundColor = MaterialTheme.colors.surface
         )
     ) {
         Row(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 36.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -646,16 +655,18 @@ fun WatchAccountCard(account: Account, currentEpoch: Long) {
                 Text(
                     text = account.label,
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    maxLines = 1
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colors.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 if (account.username != null) {
                     Text(
                         text = account.username,
                         fontSize = 9.sp,
-                        color = Color.LightGray,
-                        maxLines = 1
+                        color = WatchSecondaryText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -664,9 +675,9 @@ fun WatchAccountCard(account: Account, currentEpoch: Long) {
             
             Text(
                 text = formattedCode,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colors.primary,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colors.onSurface,
                 fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
             )
         }

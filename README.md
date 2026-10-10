@@ -29,7 +29,7 @@
 ---
 
 > [!NOTE]
-> For release logs, see [CHANGELOG.md](CHANGELOG.md). All details regarding the Wear OS companion app (features, setup, security, and codebase structure) can be found in [WEAROS.md](WEAROS.md).
+> For the overall release log, see [CHANGELOG.md](CHANGELOG.md). Wear OS features, setup, security, and the [independent watch changelog](WEAROS.md#changelog) are documented in [WEAROS.md](WEAROS.md). Changes under Unreleased are not yet part of the latest tagged releases.
 
 ## Table of Contents
 - [Features](#features)
@@ -52,13 +52,13 @@
 
 ### Premium Security
 - **Hardware-Backed Encryption**: Master encryption keys are stored securely within the device's Secure Element (SE) or Trusted Execution Environment (TEE) via the Android KeyStore.
-- **Biometric & Device Lock**: Optional biometric prompt (fingerprint or face unlock) required on app startup, with native device credentials (PIN/pattern/password) fallback to prevent lockouts.
-- **Biometric Protection for Keys & Deletion**: Mandatory biometric authentication required before revealing plaintext secret keys, copying secret keys to clipboard, or deleting an account.
+- **Biometric & Device Lock**: Optional app lock using Android-supported Class 2 or stronger face/fingerprint authentication or device PIN, pattern, or password. Enabling app lock requires successful verification; cancelling leaves it disabled. Face recognition must be exposed through Android's biometric API.
+- **Protected Keys & Deletion**: Identity verification is required before revealing or copying secret keys, or deleting an account. Cancellation, errors, and prompt exceptions keep protected actions blocked.
 - **Prevent Screenshots & Recents Preview (`FLAG_SECURE`)**: User-configurable toggle in Settings that enforces `FLAG_SECURE`, blocking screen captures and obscuring app previews in the Android Recent Apps switcher.
 - **Zero Network Footprint**: Fully offline. The app requests no internet permission whatsoever. (Note: Google Play Services handles ML model downloads at the OS level, keeping the app completely sandboxed from the network).
 
 ### Wear OS Integration
-- **Biometric Syncing**: Wirelessly transfer accounts from phone to watch via Bluetooth, protected by the phone's biometric verification.
+- **Protected Watch Sync**: Transfer accounts through the Wear OS Data Layer after face/fingerprint or device-credential verification. The phone and watch must be paired through their Wear OS companion setup; a Bluetooth connection alone does not establish the app's sync connection.
 - **Customizable Duress PIN**: Configure the maximum allowed PIN attempts (e.g., 3, 6, 9, or unlimited) on your watch directly from the phone app. If the limit is exceeded, all watch accounts are silently wiped to protect your data.
 
 ### Aesthetic UI/UX
@@ -206,8 +206,8 @@ The `AccountSerializer.fromJson()` parser handles multiple formats:
 > For full details on the watch companion module, see [WEAROS.md](WEAROS.md).
 
 1. The phone app queries `Wearable.getNodeClient()` to detect connected watches. The "Sync to Watch" settings row only appears when a paired node is found.
-2. On tap, biometric authentication is required. After verification, `AccountSerializer.toJson(accounts, decryptSecrets = true)` produces a JSON payload with plaintext Base32 secrets.
-3. The payload is transmitted via `Wearable.getMessageClient().sendMessage()` over the `/sync-accounts` path through the Bluetooth data layer.
+2. On tap, face/fingerprint or device-credential verification is required. After verification, `AccountSerializer.toJson(accounts, decryptSecrets = true)` produces a JSON payload with plaintext Base32 secrets.
+3. The payload is transmitted via `Wearable.getMessageClient().sendMessage()` over the `/sync-accounts` path through the Wear OS Data Layer.
 4. On the watch, `WearSyncService` (a `WearableListenerService`) receives the message, validates each secret via `TotpGenerator.isValidSecret()`, re-encrypts each key using the **watch's own independent KeyStore master key** (alias: `AniAuthWatchMasterKey`), and saves the encrypted accounts to the watch's local `SharedPreferences`.
 5. The watch then generates TOTP codes independently using its own local clock and its own copy of `TotpGenerator` — no phone connection required after the initial sync.
 
