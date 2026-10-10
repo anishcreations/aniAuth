@@ -67,12 +67,12 @@
 - **Dynamic Alphabet Scroll Overlay**: Sleek fast-scroll sidebar on the right margin with elastic letter magnification, tactile feedback clicks, and a floating preview bubble that follows your finger. Automatically stays faint and out of focus when idle, lighting up dynamically when you scroll or hover to keep the dashboard clutter-free.
 - **Dedicated Settings Screen**: Access theme configurations, data management (encrypted backups/imports), biometric security toggles, policy details, and guides in one centralized screen.
 - **Comprehensive User Manual & Wear OS Sync Guide**: In-app guide detailing quick controls, single global timer sync, TEE KeyStore encryption, password-protected backups, and Wear OS Bluetooth sync & offline security mechanics.
-- **Integrated Search & Timer**: Unified search bar and countdown timer in a sleek pill header. Displays a soft-toned refresh message that collapses into an active search field with automatic keyboard focus on click.
-- **One-Tap Copy**: Tap any card to copy the code directly to your clipboard.
+- **Integrated Search & Timer**: Search and the shared countdown sit together in a compact header. The refresh message switches to a focused search field on demand.
+- **One-Tap Copy**: Tap any card to copy the code directly to your clipboard. Turn this off under Settings → Interaction → Tap to Copy Codes.
 - **Flexible Backup Exports**: Export backups in secure Encrypted format (AES-256 encrypted with aniAuth's internal key) or Decrypted format (plaintext JSON) with built-in warnings.
 - **Account Management**: Long-press any card to securely view decrypted secret keys, edit account metadata, or delete credentials.
 - **Adaptive Launcher Icon**: Creative geometric "A" icon with glowing arches designed for modern home screen styling.
-- **Minimal Animated Scroll Hints**: Bouncing down-arrow indicators (`↓`) and 100% theme-matching seamless gradient dissolves on scrollable popups and lists to hint overflow without visual clutter.
+- **Minimal Scroll Hints**: Static, theme-aware down-arrow indicators and subtle fades on scrollable dialogs and lists show when more content is available.
 
 ---
 

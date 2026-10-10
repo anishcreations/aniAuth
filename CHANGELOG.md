@@ -10,6 +10,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * ⌚ **Latest Released (Wear OS)**: [v1.2.0](https://github.com/anishcreations/aniAuth/releases/tag/wear-v1.2.0) 
 > **To check full Watch Changelog: [Click Here](WEAROS.md#changelog)**
 
+## [Unreleased]
+
+### Added
+- **Tap-to-Copy Setting**: Disable tapping account cards to copy OTP codes from Settings → Interaction. Enabled by default; long-press account details and protected secret-key copying remain available.
+
+### Changed
+- **Dashboard Balance**: Brighter purple accents, balanced portrait card margins with a tiny gap beside the alphabet slider, a slightly raised slider, and a shorter footer scroll area with a centered version label.
+- **Phone UI Refinement**: Quieter purple accents, balanced light/dark surfaces, clearer account codes, consistent type and spacing, flatter account cards, and more readable settings and dialogs. Existing flows and authentication behavior are preserved.
+
+### Fixed
+- **Face Unlock Compatibility**: Accept Android-supported Class 2 or stronger face/fingerprint authentication for app unlock, secret key reveal/copy, account deletion, backup export, and watch sync, with device PIN, pattern, or password fallback. Face unlock must be exposed to apps by Android.
+- **Authentication Error Bypass**: Keep protected actions blocked when authentication cannot start, is cancelled, or fails, and show setup or availability guidance when needed.
+- **Device Credential Fallback**: Allow system PIN, pattern, or password verification to finish without cancelling it when the app pauses; preserve background relocking.
+- **Biometric Lock Activation**: Save the enabled setting only after successful identity verification. Cancelling or failing verification leaves the lock disabled, including after reopening the app; successful activation keeps the current session unlocked.
+
 ## [1.7.0] (2026-08-03)
 
 ### Added

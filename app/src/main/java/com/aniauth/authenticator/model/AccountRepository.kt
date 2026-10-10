@@ -52,4 +52,10 @@ class AccountRepository(context: Context) {
     fun saveSortOrder(order: String) {
         prefs.edit().putString("sort_order", order).apply()
     }
+
+    fun isTapToCopyEnabled(): Boolean = prefs.getBoolean("tap_to_copy_enabled", true)
+
+    fun setTapToCopyEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("tap_to_copy_enabled", enabled).apply()
+    }
 }

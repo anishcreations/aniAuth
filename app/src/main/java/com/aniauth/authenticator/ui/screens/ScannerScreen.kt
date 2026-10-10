@@ -9,6 +9,8 @@ import androidx.camera.view.CameraController.COORDINATE_SYSTEM_VIEW_REFERENCED
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
@@ -55,7 +57,7 @@ fun ScannerScreen(
         }
     }
     
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
         if (hasCameraPermission) {
             val options = remember {
                 BarcodeScannerOptions.Builder()
@@ -102,7 +104,7 @@ fun ScannerScreen(
             
         } else {
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().safeDrawingPadding().padding(32.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -117,7 +119,9 @@ fun ScannerScreen(
         IconButton(
             onClick = onDismiss,
             modifier = Modifier
+                .statusBarsPadding()
                 .padding(16.dp)
+                .background(Color.Black.copy(alpha = 0.65f), CircleShape)
                 .align(Alignment.TopEnd)
         ) {
             Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)

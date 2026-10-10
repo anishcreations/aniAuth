@@ -2,6 +2,8 @@ package com.aniauth.authenticator.ui.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
@@ -12,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -33,6 +36,8 @@ fun AccountDetailsScreen(
     onDelete: () -> Unit,
     onVerifyIdentity: ((title: String, subtitle: String, onSuccess: () -> Unit) -> Unit)? = null
 ) {
+    val contentHeight = (LocalConfiguration.current.screenHeightDp.dp - 200.dp)
+        .coerceIn(96.dp, 420.dp)
     var label by remember { mutableStateOf(account.label) }
     var username by remember { mutableStateOf(account.username ?: "") }
     var isSecretVisible by remember { mutableStateOf(false) }
@@ -48,23 +53,25 @@ fun AccountDetailsScreen(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text("Account Details", fontSize = 20.sp, color = TextPrimary, fontWeight = FontWeight.Bold)
+            Text("Account Details", style = MaterialTheme.typography.titleLarge, color = TextPrimary)
         },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                modifier = Modifier.fillMaxWidth().heightIn(max = contentHeight)
+                    .verticalScroll(rememberScrollState()).padding(top = 8.dp)
             ) {
                 // Editable Issuer/Label
-                TextField(
+                OutlinedTextField(
                     value = label,
                     onValueChange = { label = it },
                     label = { Text("Issuer", color = TextSecondary) },
                     singleLine = true,
-                    colors = TextFieldDefaults.colors(
+                    colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = DarkCard,
                         unfocusedContainerColor = DarkCard,
-                        focusedIndicatorColor = PurpleAccent,
+                        focusedBorderColor = PurpleAccent,
+                        unfocusedBorderColor = BorderColor,
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary
                      ),
@@ -72,15 +79,16 @@ fun AccountDetailsScreen(
                 )
 
                 // Editable Username
-                TextField(
+                OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
                     label = { Text("Name / ID", color = TextSecondary) },
                     singleLine = true,
-                    colors = TextFieldDefaults.colors(
+                    colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = DarkCard,
                         unfocusedContainerColor = DarkCard,
-                        focusedIndicatorColor = PurpleAccent,
+                        focusedBorderColor = PurpleAccent,
+                        unfocusedBorderColor = BorderColor,
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary
                     ),
@@ -160,9 +168,9 @@ fun AccountDetailsScreen(
                     modifier = Modifier.align(Alignment.Start),
                     contentPadding = PaddingValues(0.dp)
                 ) {
-                    Icon(Icons.Default.Delete, contentDescription = null, tint = Color.Red, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Delete Account", color = Color.Red, fontSize = 14.sp)
+                    Text("Delete Account", color = MaterialTheme.colorScheme.error, fontSize = 14.sp)
                 }
             }
         },
@@ -171,7 +179,7 @@ fun AccountDetailsScreen(
                 onClick = { onUpdate(label.trim(), username.trim().takeIf { it.isNotEmpty() }) },
                 colors = ButtonDefaults.buttonColors(containerColor = PurpleAccent)
             ) {
-                Text("Save Changes", color = TextPrimary)
+                Text("Save Changes", color = MaterialTheme.colorScheme.onPrimary)
             }
         },
         dismissButton = {
@@ -202,9 +210,9 @@ fun AccountDetailsScreen(
                             onDelete()
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Delete", color = Color.White)
+                    Text("Delete", color = MaterialTheme.colorScheme.onError)
                 }
             },
             dismissButton = {

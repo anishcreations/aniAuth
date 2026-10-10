@@ -36,15 +36,15 @@ fun BiometricLockScreen(
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(96.dp)
-                    .clip(CircleShape)
-                    .background(DarkCard)
+                    .size(80.dp)
+                    .clip(MaterialTheme.shapes.large)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Icon(
                     Icons.Default.Lock,
                     contentDescription = "App Locked",
-                    tint = PurpleAccent,
-                    modifier = Modifier.size(48.dp)
+                    tint = TextSecondary,
+                    modifier = Modifier.size(32.dp)
                 )
             }
             
@@ -53,15 +53,14 @@ fun BiometricLockScreen(
             Text(
                 "aniAuth is Locked",
                 color = TextPrimary,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.headlineSmall,
                 textAlign = TextAlign.Center
             )
             
             Text(
                 "Verify your identity to view your 2FA codes",
                 color = TextSecondary,
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = 8.dp, bottom = 32.dp)
             )
@@ -70,7 +69,7 @@ fun BiometricLockScreen(
                 onClick = onUnlockClick,
                 colors = ButtonDefaults.buttonColors(containerColor = PurpleAccent),
                 contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
-                shape = CircleShape
+                shape = MaterialTheme.shapes.medium
             ) {
                 Icon(
                     Icons.Default.Fingerprint,
@@ -78,7 +77,7 @@ fun BiometricLockScreen(
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Unlock App", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text("Unlock App", color = MaterialTheme.colorScheme.onPrimary, style = MaterialTheme.typography.labelLarge)
             }
         }
     }

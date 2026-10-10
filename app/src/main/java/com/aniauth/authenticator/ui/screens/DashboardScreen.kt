@@ -37,10 +37,12 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -93,6 +95,12 @@ fun DashboardScreen(
     onVerifyIdentity: ((title: String, subtitle: String, onSuccess: () -> Unit) -> Unit)? = null
 ) {
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
+    // The slider occupies 16dp plus its 2dp edge inset; leave a 1dp gap.
+    val cardMargin = 19.dp
+    val listEndPadding = if (isLandscape) 88.dp else cardMargin
+    var isTapToCopyEnabled by remember { mutableStateOf(repository.isTapToCopyEnabled()) }
     var accounts by remember { mutableStateOf(repository.getAccounts()) }
     var searchQuery by remember { mutableStateOf("") }
     var showAddDialog by remember { mutableStateOf(false) }
@@ -161,9 +169,9 @@ fun DashboardScreen(
                 title = {
                     Text(
                         "aniAuth",
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary.copy(alpha = 0.9f),
-                        fontSize = 24.sp
+                        color = TextPrimary,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Medium
                     )
                 },
                 actions = {
@@ -176,8 +184,8 @@ fun DashboardScreen(
                             Icon(
                                 Icons.AutoMirrored.Filled.Sort,
                                 contentDescription = "Sort Accounts",
-                                tint = PurpleAccent,
-                                modifier = Modifier.size(28.dp)
+                                tint = TextSecondary,
+                                modifier = Modifier.size(24.dp)
                             )
                         }
                         DropdownMenu(
@@ -234,8 +242,8 @@ fun DashboardScreen(
                         Icon(
                             Icons.Default.Settings, 
                             contentDescription = "Settings", 
-                            tint = PurpleAccent,
-                            modifier = Modifier.size(30.dp)
+                            tint = TextSecondary,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 },
@@ -246,18 +254,22 @@ fun DashboardScreen(
             Column(horizontalAlignment = Alignment.End) {
                 FloatingActionButton(
                     onClick = { showScanner = true },
-                    containerColor = if (MaterialTheme.colorScheme.background == RawLightBg) PurpleAccent else PurpleAccent.copy(alpha = 0.85f),
-                    contentColor = Color.White,
-                    shape = CircleShape,
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    shape = MaterialTheme.shapes.medium,
+                    elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 0.dp, pressedElevation = 2.dp),
                     modifier = Modifier.padding(bottom = 16.dp)
                 ) {
                     Icon(Icons.Default.QrCodeScanner, contentDescription = "Scan QR Code", modifier = Modifier.size(24.dp))
                 }
                 FloatingActionButton(
                     onClick = { showAddDialog = true },
-                    containerColor = if (MaterialTheme.colorScheme.background == RawLightBg) PurpleAccent else PurpleAccent.copy(alpha = 0.85f),
-                    contentColor = Color.White,
-                    shape = CircleShape
+                    containerColor = if (MaterialTheme.colorScheme.background == RawLightBg)
+                        Color(0xFFC9D9F2) else Color(0xFF273D59),
+                    contentColor = if (MaterialTheme.colorScheme.background == RawLightBg)
+                        Color(0xFF203A5A) else Color(0xFFDCE8FA),
+                    shape = MaterialTheme.shapes.medium,
+                    elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 0.dp, pressedElevation = 2.dp)
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Account", modifier = Modifier.size(28.dp))
                 }
@@ -275,12 +287,11 @@ fun DashboardScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
-                        .height(64.dp)
-                        .clip(RoundedCornerShape(32.dp))
+                        .padding(horizontal = cardMargin, vertical = 12.dp)
+                        .heightIn(min = 64.dp)
+                        .clip(MaterialTheme.shapes.medium)
                         .background(DarkCard)
-                        .border(1.dp, BorderColor.copy(alpha = 0.5f), RoundedCornerShape(32.dp))
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Circular Timer on the Left
@@ -290,17 +301,16 @@ fun DashboardScreen(
                     ) {
                         CircularProgressIndicator(
                             progress = { progress },
-                            color = if (timeRemaining <= 5) Color.Red else EmeraldGreen,
-                            strokeWidth = 3.dp,
+                            color = if (timeRemaining <= 5) MaterialTheme.colorScheme.error else PurpleAccent,
+                            strokeWidth = 2.dp,
                             trackColor = BorderColor,
                             strokeCap = StrokeCap.Round,
                             modifier = Modifier.fillMaxSize()
                         )
                         Text(
                             text = timeRemaining.toString(),
-                            color = if (timeRemaining <= 5) Color.Red else TextPrimary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp
+                            color = if (timeRemaining <= 5) MaterialTheme.colorScheme.error else TextPrimary,
+                            style = MaterialTheme.typography.labelMedium
                         )
                     }
 
@@ -315,6 +325,7 @@ fun DashboardScreen(
                             BasicTextField(
                                 value = searchQuery,
                                 onValueChange = { searchQuery = it },
+                                cursorBrush = SolidColor(PurpleAccent),
                                 textStyle = TextStyle(color = TextPrimary, fontSize = 15.sp),
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -336,14 +347,14 @@ fun DashboardScreen(
                             Column {
                                 Text(
                                     "Time-based OTP",
-                                    color = TextPrimary.copy(alpha = 0.85f),
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 15.sp
+                                    color = TextPrimary,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium
                                 )
                                 Text(
                                     "Automatically refreshes every 30s",
-                                    color = TextSecondary.copy(alpha = 0.6f),
-                                    fontSize = 11.sp
+                                    color = TextSecondary,
+                                    style = MaterialTheme.typography.bodySmall
                                 )
                             }
                         }
@@ -361,12 +372,12 @@ fun DashboardScreen(
                                 isSearchExpanded = true
                             }
                         },
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             imageVector = if (isSearchExpanded) Icons.Default.Close else Icons.Default.Search,
                             contentDescription = if (isSearchExpanded) "Close Search" else "Open Search",
-                            tint = PurpleAccent,
+                            tint = TextSecondary,
                             modifier = Modifier.size(22.dp)
                         )
                     }
@@ -377,18 +388,17 @@ fun DashboardScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 12.dp)
-                        .height(64.dp)
-                        .clip(RoundedCornerShape(32.dp))
+                        .heightIn(min = 64.dp)
+                        .clip(MaterialTheme.shapes.medium)
                         .background(DarkCard)
-                        .border(1.dp, BorderColor.copy(alpha = 0.5f), RoundedCornerShape(32.dp))
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.VpnKey, contentDescription = null, tint = PurpleAccent, modifier = Modifier.size(24.dp))
+                    Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.VpnKey, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text("No accounts added yet", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                        Text("No accounts added yet", color = TextPrimary, style = MaterialTheme.typography.bodyMedium)
                     }
                     TextButton(
                         onClick = onImportBackup,
@@ -426,7 +436,7 @@ fun DashboardScreen(
                         val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
                         Text(
                             text = "aniAuth v1.7.0",
-                            color = TextSecondary.copy(alpha = 0.3f),
+                            color = TextSecondary,
                             fontSize = 11.sp,
                             fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                             modifier = Modifier.clickable {
@@ -463,67 +473,75 @@ fun DashboardScreen(
                     LazyColumn(
                         state = lazyListState,
                         modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                        contentPadding = PaddingValues(start = 16.dp, end = 22.dp, top = 4.dp, bottom = 16.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(start = cardMargin, end = listEndPadding, top = 4.dp, bottom = 16.dp)
                     ) {
                         items(filteredAccounts, key = { it.id }) { account ->
                             AccountCard(
                                 account = account,
                                 timeRemaining = timeRemaining,
+                                isTapToCopyEnabled = isTapToCopyEnabled,
                                 onLongClick = {
                                     selectedAccountForDetails = account
                                 }
                             )
                         }
 
-                        // Noticeable Footer at the end of scroll
+                        // Keep footer links beside the floating buttons, without a blank scroll tail.
                         item {
-                            Surface(
-                                onClick = { showManual = true },
-                                color = SoftFooterColor.copy(alpha = 0.04f),
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 24.dp, bottom = 12.dp)
+                            Column(
+                                modifier = Modifier.fillMaxWidth()
+                                    .heightIn(min = if (isLandscape) 96.dp else 144.dp)
+                                    .padding(top = 12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(16.dp),
-                                    horizontalArrangement = Arrangement.Center,
-                                    verticalAlignment = Alignment.CenterVertically
+                                Surface(
+                                    onClick = { showManual = true },
+                                    color = SoftFooterColor.copy(alpha = 0.04f),
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .offset(y = 5.dp)
+                                        .padding(end = if (isLandscape) 0.dp else 72.dp)
+                                        .padding(bottom = 8.dp)
                                 ) {
-                                    Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, tint = SoftFooterColor.copy(alpha = 0.8f), modifier = Modifier.size(18.dp))
-                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Row(
+                                        modifier = Modifier.padding(16.dp),
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, tint = SoftFooterColor, modifier = Modifier.size(18.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            "View User Manual & Tips",
+                                            color = SoftFooterColor,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
+                                val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .offset(x = if (isLandscape) (listEndPadding - cardMargin) / 2 else 0.dp)
+                                        .padding(vertical = 8.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
                                     Text(
-                                        "View User Manual & Tips",
-                                        color = SoftFooterColor.copy(alpha = 0.8f),
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Medium
+                                        text = "aniAuth v1.7.0",
+                                        color = SoftFooterColor,
+                                        fontSize = 11.sp,
+                                        fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                        modifier = Modifier.clickable {
+                                            try {
+                                                uriHandler.openUri("https://github.com/anishcreations/aniAuth/blob/main/CHANGELOG.md")
+                                            } catch (e: Exception) {
+                                                e.printStackTrace()
+                                            }
+                                        }
                                     )
                                 }
-                            }
-                        }
-                        
-                        item {
-                            val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 8.dp, bottom = 36.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "aniAuth v1.7.0",
-                                    color = SoftFooterColor.copy(alpha = 0.3f),
-                                    fontSize = 11.sp,
-                                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
-                                    modifier = Modifier.clickable {
-                                        try {
-                                            uriHandler.openUri("https://github.com/anishcreations/aniAuth/blob/main/CHANGELOG.md")
-                                        } catch (e: Exception) {
-                                            e.printStackTrace()
-                                        }
-                                    }
-                                )
                             }
                         }
                     }
@@ -532,7 +550,7 @@ fun DashboardScreen(
                     AlphabetSidebar(
                         modifier = Modifier
                             .align(Alignment.CenterEnd)
-                            .offset(y = (-70).dp)
+                            .offset(y = (-49).dp)
                             .padding(end = 2.dp)
                             .height(440.dp)
                             .graphicsLayer { this.alpha = sidebarAlpha },
@@ -579,17 +597,16 @@ fun DashboardScreen(
                                 .align(Alignment.CenterEnd)
                                 .offset(
                                     x = (-36).dp,
-                                    y = with(LocalDensity.current) { activeLetterY.toDp() } - 290.dp
+                                    y = with(LocalDensity.current) { activeLetterY.toDp() } - 339.dp
                                 )
                                 .size(56.dp)
                                 .clip(CircleShape)
-                                .background(PurpleAccent.copy(alpha = 0.95f))
-                                .border(1.5.dp, Color.White.copy(alpha = 0.3f), CircleShape),
+                                .background(PurpleAccent),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = activeLetter.toString(),
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onPrimary,
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -650,7 +667,12 @@ fun DashboardScreen(
             isWatchConnected = isWatchConnected,
             onSyncToWatch = onSyncToWatch,
             isScreenSecurityEnabled = isScreenSecurityEnabled,
-            onToggleScreenSecurity = onToggleScreenSecurity
+            onToggleScreenSecurity = onToggleScreenSecurity,
+            isTapToCopyEnabled = isTapToCopyEnabled,
+            onToggleTapToCopy = { enabled ->
+                repository.setTapToCopyEnabled(enabled)
+                isTapToCopyEnabled = enabled
+            }
         )
     }
 
@@ -709,7 +731,7 @@ fun UserManualDialog(onDismiss: () -> Unit) {
                         .verticalScroll(scrollState),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text("📱 Dashboard & Quick Actions", color = PurpleAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text("Dashboard & Quick Actions", color = PurpleAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     GuideItem(Icons.Default.TouchApp, "Tap to Copy: Single-tap any account card to copy its 6-digit TOTP code instantly to your clipboard.")
                     GuideItem(Icons.Default.AdsClick, "Account Details: Tap and hold (long-press) any card to edit details, view the secret key, or delete the account.")
                     GuideItem(Icons.Default.QrCodeScanner, "QR Camera Scanner: Tap the scanner button to scan 2FA QR codes powered by ML Kit Vision API.")
@@ -719,14 +741,14 @@ fun UserManualDialog(onDismiss: () -> Unit) {
 
                     HorizontalDivider(color = BorderColor.copy(alpha = 0.5f), thickness = 1.dp)
 
-                    Text("⏱️ Global Timer & Security", color = PurpleAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text("Global Timer & Security", color = PurpleAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     GuideItem(Icons.Default.Timer, "Single Global Timer: The circular ring in the search bar counts down the 30-second TOTP step for all accounts in unison.")
                     GuideItem(Icons.Default.Security, "Hardware KeyStore Encryption: Secrets are encrypted locally using AES-GCM backed by Android KeyStore TEE/SE.")
                     GuideItem(Icons.Default.Backup, "Encrypted Backups: Export and import password-protected JSON backup files safely from Settings.")
 
                     HorizontalDivider(color = BorderColor.copy(alpha = 0.5f), thickness = 1.dp)
 
-                    Text("⌚ Wear OS Watch Companion Sync Guide", color = PurpleAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text("Wear OS Watch Companion Sync Guide", color = PurpleAccent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     GuideItem(Icons.Default.Watch, "Bluetooth Sync: Open Settings and tap 'Sync to Watch' (requires biometric auth) to push accounts to your paired Wear OS smartwatch via Google Play Services DataLayer.")
                     GuideItem(Icons.Default.WifiOff, "100% Offline Watch TOTP: Once synced, the Wear OS watch app generates TOTP codes fully offline without requiring a connected phone or internet.")
                     GuideItem(Icons.Default.Lock, "Watch Instant Auto-Lock: The watch app locks instantly when minimized or when the watch screen dims.")
@@ -765,7 +787,8 @@ fun GuideItem(icon: ImageVector, text: String) {
 fun AccountCard(
     account: Account,
     timeRemaining: Long,
-    onLongClick: () -> Unit
+    onLongClick: () -> Unit,
+    isTapToCopyEnabled: Boolean = true
 ) {
     val context = LocalContext.current
 
@@ -799,11 +822,12 @@ fun AccountCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(92.dp)
+            .heightIn(min = 92.dp)
             .border(1.dp, BorderColor, shape = RoundedCornerShape(14.dp))
             .clip(RoundedCornerShape(14.dp))
             .combinedClickable(
                 onClick = {
+                    if (!isTapToCopyEnabled) return@combinedClickable
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     val clip = ClipData.newPlainText("2FA Code", code)
                     clipboard.setPrimaryClip(clip)
@@ -814,11 +838,12 @@ fun AccountCard(
         colors = CardDefaults.cardColors(
             containerColor = DarkCard
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
+                .heightIn(min = 92.dp)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
@@ -831,16 +856,15 @@ fun AccountCard(
                 Box(
                     modifier = Modifier
                         .size(36.dp)
-                        .clip(CircleShape)
-                        .background(PurpleAccent.copy(alpha = 0.2f))
-                        .border(1.dp, PurpleAccent.copy(alpha = 0.5f), CircleShape),
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = initialChar,
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = PurpleAccent
+                        fontWeight = FontWeight.Medium,
+                        color = TextSecondary
                     )
                 }
 
@@ -848,17 +872,16 @@ fun AccountCard(
                     Text(
                         text = account.label,
                         color = TextPrimary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Medium,
+                        style = MaterialTheme.typography.bodyLarge,
                         maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                     if (!account.username.isNullOrEmpty()) {
                         Text(
                             text = account.username,
-                            color = TextSecondary.copy(alpha = 0.6f),
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 12.sp,
+                            color = TextSecondary,
+                            style = MaterialTheme.typography.bodySmall,
                             maxLines = 1,
                             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
@@ -870,11 +893,11 @@ fun AccountCard(
 
             Text(
                 text = formattedCode,
-                color = if (timeRemaining <= 5) Color.Red else EmeraldGreen,
-                fontWeight = FontWeight.Bold,
-                fontSize = 26.sp,
+                color = if (timeRemaining <= 5) MaterialTheme.colorScheme.error else TextPrimary,
+                fontWeight = FontWeight.Medium,
+                fontSize = 24.sp,
                 fontFamily = FontFamily.Monospace,
-                letterSpacing = 1.sp
+                letterSpacing = 0.sp
             )
         }
     }

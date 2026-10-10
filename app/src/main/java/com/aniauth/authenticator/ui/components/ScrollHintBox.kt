@@ -18,12 +18,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.aniauth.authenticator.ui.theme.DarkBg
 import com.aniauth.authenticator.ui.theme.DarkCard
-import com.aniauth.authenticator.ui.theme.PurpleAccent
-import com.aniauth.authenticator.ui.theme.RawLightBg
 
 /**
  * ScrollHintBox provides a 100% seamless gradient fade matching the exact popup background surface color,
- * plus a plain bouncing arrow icon (White in Dark theme, Purple in Light theme).
+ * plus a static, theme-aware arrow for overflow.
  */
 @Composable
 fun ScrollHintBox(
@@ -34,19 +32,7 @@ fun ScrollHintBox(
 ) {
     val canScrollForward by remember { derivedStateOf { scrollState.canScrollForward } }
 
-    val infiniteTransition = rememberInfiniteTransition(label = "ScrollHintBounce")
-    val bounceOffsetY by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 4f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 650, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "bounceY"
-    )
-
-    val isLight = MaterialTheme.colorScheme.background == RawLightBg
-    val arrowTint = if (isLight) PurpleAccent.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.85f)
+    val arrowTint = MaterialTheme.colorScheme.onSurfaceVariant
 
     Box(modifier = modifier) {
         content()
@@ -70,11 +56,11 @@ fun ScrollHintBox(
             )
         }
 
-        // Plain Transparent Bouncing Down-Arrow Icon (White in Dark theme)
+        // Theme-aware down-arrow hint
         AnimatedVisibility(
             visible = canScrollForward,
-            enter = fadeIn(tween(200)) + slideInVertically { it / 2 },
-            exit = fadeOut(tween(150)) + slideOutVertically { it / 2 },
+            enter = fadeIn(tween(200)),
+            exit = fadeOut(tween(150)),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 2.dp)
@@ -85,14 +71,13 @@ fun ScrollHintBox(
                 tint = arrowTint,
                 modifier = Modifier
                     .size(20.dp)
-                    .offset(y = bounceOffsetY.dp)
             )
         }
     }
 }
 
 /**
- * LazyColumnScrollHintBox provides a 100% seamless theme-matching gradient and bouncing arrow for LazyColumn lists.
+ * LazyColumnScrollHintBox provides a 100% seamless theme-matching gradient and static arrow for LazyColumn lists.
  */
 @Composable
 fun LazyColumnScrollHintBox(
@@ -103,19 +88,7 @@ fun LazyColumnScrollHintBox(
 ) {
     val canScrollForward by remember { derivedStateOf { lazyListState.canScrollForward } }
 
-    val infiniteTransition = rememberInfiniteTransition(label = "LazyScrollHintBounce")
-    val bounceOffsetY by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 4f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 650, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "bounceY"
-    )
-
-    val isLight = MaterialTheme.colorScheme.background == RawLightBg
-    val arrowTint = if (isLight) PurpleAccent.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.85f)
+    val arrowTint = MaterialTheme.colorScheme.onSurfaceVariant
 
     Box(modifier = modifier) {
         content()
@@ -139,11 +112,11 @@ fun LazyColumnScrollHintBox(
             )
         }
 
-        // Plain Transparent Bouncing Down-Arrow Icon (White in Dark theme)
+        // Theme-aware down-arrow hint
         AnimatedVisibility(
             visible = canScrollForward,
-            enter = fadeIn(tween(200)) + slideInVertically { it },
-            exit = fadeOut(tween(150)) + slideOutVertically { it },
+            enter = fadeIn(tween(200)),
+            exit = fadeOut(tween(150)),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 4.dp)
@@ -154,7 +127,6 @@ fun LazyColumnScrollHintBox(
                 tint = arrowTint,
                 modifier = Modifier
                     .size(22.dp)
-                    .offset(y = bounceOffsetY.dp)
             )
         }
     }

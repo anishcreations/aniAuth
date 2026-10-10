@@ -1,10 +1,13 @@
 package com.aniauth.authenticator.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -12,6 +15,7 @@ import com.aniauth.authenticator.ui.theme.DarkCard
 import com.aniauth.authenticator.ui.theme.TextPrimary
 import com.aniauth.authenticator.ui.theme.TextSecondary
 import com.aniauth.authenticator.ui.theme.PurpleAccent
+import com.aniauth.authenticator.ui.theme.BorderColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -19,6 +23,8 @@ fun AddAccountScreen(
     onDismiss: () -> Unit,
     onAdd: (label: String, secret: String, issuer: String?, username: String?) -> Unit
 ) {
+    val contentHeight = (LocalConfiguration.current.screenHeightDp.dp - 200.dp)
+        .coerceIn(96.dp, 420.dp)
     var secret by remember { mutableStateOf("") }
     var issuer by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
@@ -28,56 +34,59 @@ fun AddAccountScreen(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text("Add Account", fontSize = 20.sp, color = TextPrimary)
+            Text("Add Account", style = MaterialTheme.typography.titleLarge, color = TextPrimary)
         },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().heightIn(max = contentHeight).verticalScroll(rememberScrollState())
             ) {
                 if (errorText.isNotEmpty()) {
                     Text(errorText, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
                 }
                 
-                TextField(
+                OutlinedTextField(
                     value = issuer,
                     onValueChange = { issuer = it },
                     label = { Text("Issuer (e.g. Google)", color = TextSecondary) },
                     singleLine = true,
-                    colors = TextFieldDefaults.colors(
+                    colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = DarkCard,
                         unfocusedContainerColor = DarkCard,
-                        focusedIndicatorColor = PurpleAccent,
+                        focusedBorderColor = PurpleAccent,
+                        unfocusedBorderColor = BorderColor,
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary
                     ),
                     modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
                 )
 
-                TextField(
+                OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
                     label = { Text("Name (e.g. user@email.com)", color = TextSecondary) },
                     singleLine = true,
-                    colors = TextFieldDefaults.colors(
+                    colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = DarkCard,
                         unfocusedContainerColor = DarkCard,
-                        focusedIndicatorColor = PurpleAccent,
+                        focusedBorderColor = PurpleAccent,
+                        unfocusedBorderColor = BorderColor,
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary
                     ),
                     modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
                 )
                 
-                TextField(
+                OutlinedTextField(
                     value = secret,
                     onValueChange = { secret = it },
                     label = { Text("Key (Base32)", color = TextSecondary) },
                     singleLine = true,
-                    colors = TextFieldDefaults.colors(
+                    colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = DarkCard,
                         unfocusedContainerColor = DarkCard,
-                        focusedIndicatorColor = PurpleAccent,
+                        focusedBorderColor = PurpleAccent,
+                        unfocusedBorderColor = BorderColor,
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary
                     ),
@@ -108,7 +117,7 @@ fun AddAccountScreen(
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = PurpleAccent)
             ) {
-                Text("Save", color = TextPrimary)
+                Text("Save", color = MaterialTheme.colorScheme.onPrimary)
             }
         },
         dismissButton = {
@@ -116,6 +125,6 @@ fun AddAccountScreen(
                 Text("Cancel", color = TextPrimary)
             }
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.surface
     )
 }

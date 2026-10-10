@@ -32,7 +32,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var repository: AccountRepository
     private lateinit var executor: Executor
     private lateinit var biometricPrompt: BiometricPrompt
-    private lateinit var promptInfo: BiometricPrompt.PromptInfo
+    private val allowedAuthenticators = BiometricManager.Authenticators.BIOMETRIC_WEAK or
+        BiometricManager.Authenticators.DEVICE_CREDENTIAL
+    private val authenticationSession = AuthenticationSession()
 
     private var isAppLocked by mutableStateOf(false)
     private var isUnlocked by mutableStateOf(false)
@@ -41,8 +43,6 @@ class MainActivity : AppCompatActivity() {
     private var pendingExportType: String? = null
     private var isWatchConnected by mutableStateOf(false)
     private var isNavigatingForFile = false
-    private var activeBiometricPrompt: BiometricPrompt? = null
-    private var pendingAuthenticationAction: (() -> Unit)? = null
 
     // Default backup password key
     private val backupPassword = "aniauth_secure_pass".toCharArray()
@@ -168,21 +168,27 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         checkWatchConnection()
-        
-        if (isAppLocked) {
-            if (isNavigatingForFile) {
-                isNavigatingForFile = false
-            } else {
-                isUnlocked = false
-                authenticateBiometric()
-            }
+        val returningFromFile = isNavigatingForFile
+        if (returningFromFile) isNavigatingForFile = false
+        authenticationSession.onResume()
+
+        if (!returningFromFile && isAppLocked && !isUnlocked && !authenticationSession.isInProgress) {
+            authenticateBiometric()
         }
     }
 
     override fun onPause() {
         super.onPause()
-        activeBiometricPrompt?.cancelAuthentication()
-        activeBiometricPrompt = null
+        authenticationSession.onPause()
+        // AndroidX owns prompt cancellation. Cancelling here also cancels the system PIN screen.
+        if (isAppLocked && !isNavigatingForFile && !authenticationSession.isInProgress) {
+            isUnlocked = false
+        }
+    }
+
+    override fun onDestroy() {
+        authenticationSession.onError()
+        super.onDestroy()
     }
 
     private fun checkWatchConnection() {
@@ -268,11 +274,16 @@ class MainActivity : AppCompatActivity() {
                         onExportBackup = { isEncrypted -> triggerExport(isEncrypted) },
                         onImportBackup = { triggerImport() },
                         onToggleLock = { enabled ->
-                            getSharedPreferences("ani_auth_prefs", MODE_PRIVATE).edit {
-                                putBoolean("app_lock_enabled", enabled)
+                            if (enabled) {
+                                verifyIdentityBeforeAction(
+                                    title = "Enable Biometric Lock",
+                                    subtitle = "Verify identity to enable app protection"
+                                ) {
+                                    updateAppLock(true)
+                                }
+                            } else {
+                                updateAppLock(false)
                             }
-                            isAppLocked = enabled
-                            if (enabled) isUnlocked = false
                         },
                         isLocked = isAppLocked,
                         themeSetting = themeSetting,
@@ -301,6 +312,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateAppLock(enabled: Boolean) {
+        getSharedPreferences("ani_auth_prefs", MODE_PRIVATE).edit {
+            putBoolean("app_lock_enabled", enabled)
+        }
+        isAppLocked = enabled
+        // Enabling only reaches here after successful authentication; keep this session unlocked.
+        isUnlocked = enabled
+    }
+
     private fun updateScreenSecurity(enabled: Boolean) {
         if (enabled) {
             window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
@@ -310,23 +330,45 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun verifyIdentityBeforeAction(title: String, subtitle: String, onSuccess: () -> Unit) {
-        pendingAuthenticationAction = onSuccess
-        activeBiometricPrompt = biometricPrompt
-        val info = BiometricPrompt.PromptInfo.Builder()
-            .setTitle(title)
-            .setSubtitle(subtitle)
-            .setAllowedAuthenticators(
-                BiometricManager.Authenticators.BIOMETRIC_STRONG or
-                BiometricManager.Authenticators.DEVICE_CREDENTIAL
-            )
-            .build()
-        try {
-            biometricPrompt.authenticate(info)
-        } catch (_: Exception) {
-            activeBiometricPrompt = null
-            pendingAuthenticationAction = null
-            onSuccess()
+        if (authenticationSession.isInProgress || !checkAuthenticationAvailable()) return
+        authenticationSession.authenticate(
+            action = {
+                // A successful credential prompt also verifies the app lock after an activity pause.
+                if (isAppLocked) isUnlocked = true
+                onSuccess()
+            },
+            launchPrompt = {
+                val info = BiometricPrompt.PromptInfo.Builder()
+                    .setTitle(title)
+                    .setSubtitle(subtitle)
+                    .setAllowedAuthenticators(allowedAuthenticators)
+                    .build()
+                biometricPrompt.authenticate(info)
+            },
+            onLaunchError = {
+                Toast.makeText(this, "Could not start authentication. Try again or use your device PIN, pattern, or password.", Toast.LENGTH_LONG).show()
+            }
+        )
+    }
+
+    private fun checkAuthenticationAvailable(): Boolean {
+        val status = BiometricManager.from(this).canAuthenticate(allowedAuthenticators)
+        val message = when (status) {
+            BiometricManager.BIOMETRIC_SUCCESS,
+            // Some older devices cannot determine availability; let the system prompt try safely.
+            BiometricManager.BIOMETRIC_STATUS_UNKNOWN -> return true
+            BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED ->
+                "Set up a supported face/fingerprint or device PIN, pattern, or password in Android Settings."
+            BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE ->
+                "Authentication is temporarily unavailable. Try again when your device security is available."
+            BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE ->
+                "No supported biometrics or device credentials are available. Set up a PIN, pattern, or password in Android Settings."
+            BiometricManager.BIOMETRIC_ERROR_SECURITY_UPDATE_REQUIRED ->
+                "Install your device's security update to use authentication."
+            else -> "Authentication is not supported on this device. Check your Android security settings."
         }
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+        return false
     }
 
     private fun triggerExport(isEncrypted: Boolean) {
@@ -361,40 +403,24 @@ class MainActivity : AppCompatActivity() {
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
-                    activeBiometricPrompt = null
-                    val action = pendingAuthenticationAction
-                    pendingAuthenticationAction = null
-                    if (action != null) {
-                        action.invoke()
-                    } else {
-                        isUnlocked = true
-                    }
+                    authenticationSession.onSuccess()
                 }
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
-                    activeBiometricPrompt = null
-                    pendingAuthenticationAction = null
+                    if (isAppLocked && (authenticationSession.isPaused ||
+                            authenticationSession.wasPausedDuringAuthentication)) isUnlocked = false
+                    authenticationSession.onError()
+                    if (errorCode != BiometricPrompt.ERROR_CANCELED &&
+                        errorCode != BiometricPrompt.ERROR_USER_CANCELED &&
+                        errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
+                        Toast.makeText(this@MainActivity, errString, Toast.LENGTH_LONG).show()
+                    }
                 }
             })
-
-        promptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle("Unlock aniAuth")
-            .setSubtitle("Confirm identity to view codes")
-            .setAllowedAuthenticators(
-                BiometricManager.Authenticators.BIOMETRIC_STRONG or
-                BiometricManager.Authenticators.DEVICE_CREDENTIAL
-            )
-            .build()
     }
 
     private fun authenticateBiometric() {
-        pendingAuthenticationAction = { isUnlocked = true }
-        activeBiometricPrompt = biometricPrompt
-        try {
-            biometricPrompt.authenticate(promptInfo)
-        } catch (_: Exception) {
-            activeBiometricPrompt = null
-            pendingAuthenticationAction = null
+        verifyIdentityBeforeAction("Unlock aniAuth", "Confirm identity to view codes") {
             isUnlocked = true
         }
     }

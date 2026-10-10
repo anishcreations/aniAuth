@@ -29,6 +29,8 @@ import androidx.compose.foundation.verticalScroll
 import com.aniauth.authenticator.ui.components.LazyColumnScrollHintBox
 import com.aniauth.authenticator.ui.components.ScrollHintBox
 import com.aniauth.authenticator.ui.theme.*
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +46,9 @@ fun SettingsScreen(
     isWatchConnected: Boolean = false,
     onSyncToWatch: () -> Unit = {},
     isScreenSecurityEnabled: Boolean = true,
-    onToggleScreenSecurity: (Boolean) -> Unit = {}
+    onToggleScreenSecurity: (Boolean) -> Unit = {},
+    isTapToCopyEnabled: Boolean = true,
+    onToggleTapToCopy: (Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
     var showPrivacyDialog by remember { mutableStateOf(false) }
@@ -65,10 +69,10 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings", fontWeight = FontWeight.Bold, color = TextPrimary) },
+                title = { Text("Settings", style = MaterialTheme.typography.titleLarge, color = TextPrimary) },
                 navigationIcon = {
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = PurpleAccent)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TextPrimary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg)
@@ -83,9 +87,9 @@ fun SettingsScreen(
             LazyColumn(
                 state = lazyListState,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                    .fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(28.dp)
             ) {
             // User Guide Section
             item {
@@ -159,7 +163,7 @@ fun SettingsScreen(
                     SettingsToggleItem(
                         icon = if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
                         title = "Biometric Lock",
-                        subtitle = "Require fingerprint/face to view codes",
+                        subtitle = "Use supported face/fingerprint or device PIN, pattern, or password",
                         checked = isLocked,
                         onCheckedChange = onToggleLock
                     )
@@ -174,6 +178,18 @@ fun SettingsScreen(
             }
 
             // Appearance Section
+            item {
+                SettingsSection(title = "Interaction") {
+                    SettingsToggleItem(
+                        icon = Icons.Default.ContentCopy,
+                        title = "Tap to Copy Codes",
+                        subtitle = "Copy a code by tapping its account card",
+                        checked = isTapToCopyEnabled,
+                        onCheckedChange = onToggleTapToCopy
+                    )
+                }
+            }
+
             item {
                 SettingsSection(title = "Appearance") {
                     SettingsItem(
@@ -198,7 +214,7 @@ fun SettingsScreen(
                 SettingsSection(title = "About & Support") {
                     SettingsItem(
                         icon = Icons.Default.Favorite,
-                        iconColor = Color.Red,
+                        iconColor = TextSecondary,
                         title = "Support Me",
                         subtitle = "Help support development",
                         onClick = {
@@ -244,7 +260,7 @@ fun SettingsScreen(
                                 context.startActivity(intent)
                             }
                             .padding(horizontal = 8.dp, vertical = 4.dp),
-                        color = TextSecondary.copy(alpha = 0.5f),
+                        color = TextSecondary,
                         fontSize = 12.sp
                     )
                 }
@@ -444,7 +460,7 @@ fun SettingsScreen(
                     ),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Export", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Export", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Medium)
                 }
             },
             dismissButton = {
@@ -585,10 +601,9 @@ fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) 
     Column {
         Text(
             text = title,
-            color = PurpleAccent,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
+            color = TextSecondary,
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
         )
         Surface(
             color = DarkCard,
@@ -607,23 +622,24 @@ fun SettingsItem(
     icon: ImageVector,
     title: String,
     subtitle: String,
-    iconColor: Color = PurpleAccent,
+    iconColor: Color = TextSecondary,
     onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(16.dp),
+            .heightIn(min = 76.dp)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(24.dp))
         Spacer(modifier = Modifier.width(16.dp))
-        Column {
-            Text(title, color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Medium)
-            Text(subtitle, color = TextSecondary, fontSize = 12.sp)
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(title, color = TextPrimary, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+            Text(subtitle, color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
         }
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.width(12.dp))
         Icon(Icons.Default.ChevronRight, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(20.dp))
     }
 }
@@ -639,22 +655,22 @@ fun SettingsToggleItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .heightIn(min = 80.dp)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, contentDescription = null, tint = PurpleAccent, modifier = Modifier.size(24.dp))
+        Icon(icon, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(24.dp))
         Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(title, color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Medium)
-            Text(subtitle, color = TextSecondary, fontSize = 12.sp)
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(title, color = TextPrimary, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+            Text(subtitle, color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
         }
+        Spacer(modifier = Modifier.width(12.dp))
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = EmeraldGreen,
-                checkedTrackColor = EmeraldGreen.copy(alpha = 0.5f)
-            )
+            modifier = Modifier.semantics { contentDescription = title },
+            colors = SwitchDefaults.colors()
         )
     }
 }
